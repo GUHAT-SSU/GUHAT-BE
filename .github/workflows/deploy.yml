@@ -1,0 +1,62 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - name: Checkout source code.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: create env file
+        working-directory: ./
+        run: |
+          touch .env
+          cat << EOF >> .env
+          ${{ secrets.ENV }}
+          
+      - name: build client files
+        working-directory: ./
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+      - name: zip distributions
+        run: zip -r join-ssu.zip ./ ./appspec.yml ./scripts
+
+      - name: AWS configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: upload to S3
+        run: aws s3 cp --region us-east-1 ./join-ssu.zip s3://join-ssu-bucket/public/
+
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment
+          --application-name join-ssu-codedeploy
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name deploy-group
+          --s3-location bucket=join-ssu-bucket,bundleType=zip,key=public/join-ssu.zip
