@@ -6,7 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node index.js",
-        "build": "webpack --config webpack.dev.js"
+        "build": "node index.js"
     },
     "repository": {
         "type": "git",
@@ -20,6 +20,10 @@
     "homepage": "https://github.com/JoinSSU/JoinSSU-BE#readme",
     "dependencies": {
         "express": "^4.18.2",
+        "webpack": "^5.74.0",
         "yarn": "^1.22.19"
+    },
+    "devDependencies": {
+        "webpack-cli": "^4.10.0"
     }
 }
