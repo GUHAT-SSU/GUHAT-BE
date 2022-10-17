@@ -36,11 +36,7 @@ jobs:
           cat << EOF >> .env
           ${{ secrets.ENV }}
           
-      - name: build client files
-        working-directory: ./
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
+  
       - name: zip distributions
         run: zip -r join-ssu.zip ./ ./appspec.yml ./scripts
 
