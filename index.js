@@ -5,6 +5,10 @@ const axios = require("axios");
 const puppeteer = require("puppeteer");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const passport = require("passport");
+const passportConfig = require("./passport/auth");
+const { sequelize } = require("./models");
+
 // Listen to the App Engine-specified port, or 8080 otherwise
 const PORT = 8001;
 const app = express();
@@ -16,6 +20,8 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json()); // json 파싱
+app.use(passport.initialize());
+passportConfig();
 
 app.set("port", process.env.PORT || PORT);
 
