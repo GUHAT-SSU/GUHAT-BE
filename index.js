@@ -15,11 +15,25 @@ const app = express();
 
 const authRouter = require("./routes/auth");
 
-app.use(cors());
+sequelize
+    .sync({ force: false })
+    .then(() => {
+        console.log("DB Connected Success");
+    })
+    .catch((err) => {
+        console.error(err);
+    });
+
+app.use(
+    cors({
+        origin: true, // ["http://localhost:3000"],
+        credentials: true,
+    })
+);
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json()); // json 파싱
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(passport.initialize());
 passportConfig();
 
