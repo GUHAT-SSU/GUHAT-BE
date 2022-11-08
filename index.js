@@ -14,6 +14,7 @@ const PORT = 8001;
 const app = express();
 
 const authRouter = require("./routes/auth");
+const userRouter = require("./routes/user");
 
 sequelize
     .sync({ force: false })
@@ -40,6 +41,7 @@ passportConfig();
 app.set("port", process.env.PORT || PORT);
 
 app.use("/auth", authRouter);
+app.use("/user", userRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

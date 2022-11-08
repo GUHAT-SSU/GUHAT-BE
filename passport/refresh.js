@@ -69,7 +69,7 @@ module.exports = {
 
                 console.log(`refreshToken request :${refreshToken}`);
                 console.log(`accessToken request :${accessToken}`);
-                console.log(req.body.refresh_token);
+                console.log(req.body.refreshToken);
 
                 return res.status(400).send({
                     ok: false,
