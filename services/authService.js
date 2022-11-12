@@ -5,7 +5,7 @@ const jwt = require("../utils/jwt-util");
 module.exports = {
     createUser: async (id, password) => {
         return User.create({
-            studentId: id,
+            id: id,
             password: password,
         })
             .then((newUser) => {
@@ -18,7 +18,7 @@ module.exports = {
 
     findUserByStudentId: async (studentId) => {
         return await User.findOne({
-            where: { studentId: studentId },
+            where: { id: studentId },
         }).then((_user) => {
             return _user;
         });
@@ -36,7 +36,7 @@ module.exports = {
 
     updateRefreshToken: async (studentId, refreshToken) => {
         await User.findOne({
-            where: { studentId: studentId },
+            where: { id: studentId },
         }).then((user) => {
             if (user) {
                 user.update({ token: refreshToken });

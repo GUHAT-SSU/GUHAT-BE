@@ -5,7 +5,7 @@ const puppeteer = require("puppeteer");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let browser = null;
 
-const authLogin = async (req, res) => {
+const usaintLogin = async (req, res) => {
     const id = req.body.userId;
     const pw = req.body.password;
 
@@ -55,7 +55,7 @@ const authLogin = async (req, res) => {
             page.close();
             return;
         });
-        await page.waitForNavigation({ timeout: 3000 });
+        await page.waitForNavigation({ timeout: 10000 });
         page.close();
         return true;
     } catch (e) {
@@ -144,13 +144,14 @@ const getProfile = async (req, res) => {
     }
 };
 
-const toSchedulePage = async (req, res) => {
+const getSchedule = async (req, res) => {
     try {
         const page3 = await browser.newPage();
         await page3.setDefaultNavigationTimeout(0);
         await page3.goto("https://saint.ssu.ac.kr/irj/portal", {
             waitUntil: "load",
         });
+        await page3.waitForTimeout(1000);
         await page3.waitForSelector(".mob_gnb_list");
         await page3.click(".mob_gnb_list");
 
@@ -168,7 +169,7 @@ const toSchedulePage = async (req, res) => {
             return frame.name() === "contentAreaFrame";
         });
 
-        await frame.waitForTimeout(700);
+        await frame.waitForTimeout(2000);
         if (frame.name() === "contentAreaFrame") {
             const innerFrames = frame.childFrames();
 
@@ -191,28 +192,17 @@ const toSchedulePage = async (req, res) => {
                     });
             }
             if (innerFrame !== null) {
-                await innerFrame.waitForTimeout(1000);
+                await innerFrame.waitForTimeout(2000);
 
                 try {
-                    await getSchedule(page3, innerFrame);
+                    const result = await selectSchedule(page3, innerFrame);
                     await frame.waitForTimeout(500);
 
-                    const html = await innerFrame
-                        .content()
-                        .then((html) => {
-                            return html;
-                        })
-                        .catch(
-                            // 거부 이유 기록
-                            function (reason) {
-                                console.log(
-                                    "여기서 거부된 프로미스(" +
-                                        reason +
-                                        ")를 처리하세요."
-                                );
-                            }
-                        );
-                    return scheduleParser(html);
+                    await page3.close();
+                    await browser.close();
+
+                    //결과 반환
+                    return result;
                 } catch (e) {
                     console.log(e);
                 }
@@ -220,10 +210,10 @@ const toSchedulePage = async (req, res) => {
         } else {
             console.log(frame.name());
             console.log("can not find iframe");
+            await page3.close();
+            await browser.close();
             return false;
         }
-        await page3.close();
-        await browser.close();
     } catch (error) {
         console.log(error);
         await page3.close();
@@ -232,26 +222,82 @@ const toSchedulePage = async (req, res) => {
     }
 };
 
-const getSchedule = async (page, frame) => {
+const years = [
+    // { name: "2022", selector: "#WD67" },
+    { name: "2021", selector: "#WD66" },
+    { name: "2020", selector: "#WD66" },
+    // { name: "2019", selector: "#WD64" },
+    // { name: "2018", selector: "#WD63" },
+];
+
+const semesters = [
+    { name: "1학기", selector: "#WD77" },
+    { name: "여름학기", selector: "#WD78" },
+    { name: "2학기", selector: "#WD79" },
+    { name: "겨울학기", selector: "#WD7A" },
+];
+
+const selectSchedule = async (page, frame) => {
     console.log("table parsing!!!!!!");
     // page.waitForNavigation();
     // await frame.waitForTimeout(1000);
 
+    const schedules = [];
+
     //년도 선택
     try {
-        const [response] = await Promise.all([
-            frame.$eval(`#WD21-btn`, (element) => element.click()),
-            frame.$eval(`#WD66`, (element) => element.click()),
-        ]).then((res) => {
-            console.log(res);
-        });
-    } catch (e) {
-        console.log(e);
-    }
-    await frame.waitForTimeout(500);
-    try {
-        await frame.click("#WD75-btn");
-        await frame.click(`#WD79`);
+        for (let y = 0; y < years.length; y++) {
+            const yearDown = await frame.waitForSelector(`#WD21-btn`);
+            await yearDown.click();
+            await page.waitForTimeout(200);
+
+            const yearBtn = await frame.waitForSelector(years[y].selector);
+            await yearBtn.click();
+            await page.waitForTimeout(200);
+
+            for (let s = 0; s < semesters.length; s++) {
+                const semesterDown = await frame.waitForSelector("#WD75-btn");
+                await semesterDown.click();
+                await page.waitForTimeout(200);
+
+                const semesterBtn = await frame.waitForSelector(
+                    semesters[s].selector
+                );
+                await semesterBtn.click();
+                await page.waitForTimeout(1000);
+
+                const html = await frame
+                    .content()
+                    .then((html) => {
+                        return html;
+                    })
+                    .catch(
+                        // 거부 이유 기록
+                        function (reason) {
+                            console.log(
+                                "여기서 거부된 프로미스(" +
+                                    reason +
+                                    ")를 처리하세요."
+                            );
+                        }
+                    );
+                let schedule = {
+                    year: "",
+                    semester: "",
+                    data: [],
+                };
+
+                const result = await scheduleParser(html);
+                console.log(result);
+                schedule.year = years[y].name;
+                schedule.semester = semesters[s].name;
+                schedule.data = result.isEmpty ? [] : result.schedule;
+
+                schedules.push(schedule);
+                console.log(schedules);
+            }
+        }
+        return schedules;
     } catch (e) {
         console.log(e);
     }
@@ -270,13 +316,15 @@ const getSchedule = async (page, frame) => {
 // id="WD79" => 2학기
 // id="WD7A" => 겨울학기
 
-const scheduleParser = (html) => {
+const scheduleParser = async (html) => {
     const $ = cheerio.load(html);
     const table = $("#WD8C-contentTBody");
     console.log("----------------------------table ------------------------");
-    var schedule = Array.from(Array(11), () => Array(7).fill(null));
+    var schedule = Array.from(Array(10), () => Array(6).fill(null));
 
     //TODO IF "#WD8C-contentTBody").html() === null 수강신청자료 없는 것임
+
+    let isEmpty = true;
 
     $("#WD8C-contentTBody")
         .children("tr")
@@ -284,29 +332,61 @@ const scheduleParser = (html) => {
             if (index < 11) {
                 const tds = $(el).children("td");
                 tds.each((idx, td) => {
-                    schedule[index - 1][idx] = $(td).text();
+                    if (idx !== 0 && !$(td).text().includes("비어 있음")) {
+                        isEmpty = false;
+                        let item = $(td)
+                            .children("span")
+                            .children("span:nth-child(2)")
+                            .text()
+                            .split("\n");
+
+                        let lecture = {
+                            name: "",
+                            professor: "",
+                            time: "",
+                            place: "",
+                        };
+                        if (item.length > 3) {
+                            lecture.name = item[0];
+                            lecture.professor = item[1];
+                            lecture.time = item[2];
+                            lecture.place = item[3];
+
+                            schedule[index - 1][idx - 1] = lecture;
+                        } else {
+                            schedule[index - 1][idx - 1] = $(td)
+                                .text()
+                                .includes("비어 있음")
+                                ? null
+                                : $(td).text();
+                        }
+                    } else if (idx !== 0)
+                        schedule[index - 1][idx - 1] = $(td)
+                            .text()
+                            .includes("비어 있음")
+                            ? null
+                            : $(td).text();
                 });
             }
         });
-    console.log(schedule);
-    let isEmpty = true;
-    for (let i = 0; i < schedule.length; i++) {
-        let check = schedule[i].find(
-            (element) => element !== null && !element.includes("교시")
-        );
-        console.log(check);
-        if (check) {
-            isEmpty = false;
-            break;
-        }
-    }
 
-    return { schedule: schedule, isEmpty: isEmpty };
+    const result = [];
+    // 첫번째 방법 반복문을 돌면서 바꿔준다
+
+    // 1. 배열의 행 길이만큼 반복한다
+    for (let i = 0; i < schedule[0].length; i++) {
+        const tmp = [];
+        // 2. 배열의 행에서 선택한 열의 값을 추출
+        schedule.forEach((row, idx) => tmp.push(row[i]));
+        // 3. 추출한 값을 저장
+        result.push(tmp);
+    }
+    return { schedule: result, isEmpty: isEmpty };
 };
 
 module.exports = {
-    authLogin,
+    usaintLogin,
     getProfile,
     getSchedule,
-    toSchedulePage,
+    selectSchedule,
 };

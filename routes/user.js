@@ -5,6 +5,6 @@ const userController = require("../controllers/userController");
 const router = express.Router();
 
 router.post("/", authChecker, userController.getUserInfo);
-router.post("/schedule", userController.getSchedule);
+router.post("/schedule", authChecker, userController.getSchedule);
 
 module.exports = router;
