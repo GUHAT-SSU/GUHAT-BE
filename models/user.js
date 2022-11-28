@@ -11,15 +11,43 @@ module.exports = class User extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-                //알아서 id 키 값을 생성하고 기본키로 만듬
-                studentId: {
+                //id는 학번
+                id: {
+                    primaryKey: true,
                     type: Sequelize.STRING(20),
                     allowNull: false, //NULL 값 허용 여부
-                    unique: true, //UNIQUE 여부
                 },
                 password: {
                     type: Sequelize.STRING(30),
                     allowNull: false,
+                },
+                nickname: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                name: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                grade: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                univ: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
+                },
+                major: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
+                },
+                semester: {
+                    type: Sequelize.STRING(20),
+                    allowNull: true,
+                },
+                group: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
                 },
                 token: {
                     type: Sequelize.STRING(400),

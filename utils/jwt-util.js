@@ -46,7 +46,7 @@ module.exports = {
         //  promisify를 이용하여 promise를 반환하게 해줍니다.*/
         // const getAsync = promisify(redisClient.get).bind(redisClient);
         const user = await User.findOne({
-            where: { studentId: studentId },
+            where: { id: studentId },
         }).then((_user) => {
             return _user;
         });
