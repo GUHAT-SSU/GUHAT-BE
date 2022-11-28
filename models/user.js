@@ -21,6 +21,34 @@ module.exports = class User extends Sequelize.Model {
                     type: Sequelize.STRING(30),
                     allowNull: false,
                 },
+                nickname: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                name: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                grade: {
+                    type: Sequelize.STRING(30),
+                    allowNull: true,
+                },
+                univ: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
+                },
+                major: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
+                },
+                semester: {
+                    type: Sequelize.STRING(20),
+                    allowNull: true,
+                },
+                group: {
+                    type: Sequelize.STRING(50),
+                    allowNull: true,
+                },
                 token: {
                     type: Sequelize.STRING(400),
                     allowNull: true,
