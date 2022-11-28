@@ -16,6 +16,7 @@ const app = express();
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
 
+// 시퀄라이즈 연결
 sequelize
     .sync({ force: false })
     .then(() => {
@@ -40,6 +41,7 @@ passportConfig();
 
 app.set("port", process.env.PORT || PORT);
 
+// 라우터 정의
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 
