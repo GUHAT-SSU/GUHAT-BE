@@ -1,3 +1,4 @@
+const { DataTypes } = require("sequelize");
 const Sequelize = require("sequelize");
 
 module.exports = class Schedule extends Sequelize.Model {
@@ -43,7 +44,7 @@ module.exports = class Schedule extends Sequelize.Model {
     }
     static associate(db) {
         db.User.hasMany(db.Schedule, {
-            foreignKey: "user_id",
+            foreignKey: {name: "user_id", type: DataTypes.STRING},
             sourceKey: "id",
             paranoid: true,
         });

@@ -1,4 +1,5 @@
 const Sequelize = require("sequelize");
+const { DataTypes } = require("sequelize");
 
 module.exports = class User extends Sequelize.Model {
     /*
@@ -16,38 +17,52 @@ module.exports = class User extends Sequelize.Model {
                     primaryKey: true,
                     type: Sequelize.STRING(20),
                     allowNull: false, //NULL 값 허용 여부
+                    comment: "학번"
                 },
                 password: {
                     type: Sequelize.STRING(30),
                     allowNull: false,
+                    comment: "비밀번호"
                 },
                 nickname: {
                     type: Sequelize.STRING(30),
                     allowNull: true,
+                    comment: "닉네임"
                 },
                 name: {
                     type: Sequelize.STRING(30),
                     allowNull: true,
+                    comment: "이름"
                 },
                 grade: {
                     type: Sequelize.STRING(30),
                     allowNull: true,
+                    comment: "학년"
                 },
                 univ: {
                     type: Sequelize.STRING(50),
                     allowNull: true,
+                    comment: "단과대"
                 },
                 major: {
                     type: Sequelize.STRING(50),
                     allowNull: true,
+                    comment: "전공"
                 },
                 semester: {
                     type: Sequelize.STRING(20),
                     allowNull: true,
+                    comment: "학기"
                 },
                 group: {
                     type: Sequelize.STRING(50),
                     allowNull: true,
+                    comment: "분반"
+                },
+                level : {
+                    type: Sequelize.INTEGER(20),
+                    allowNull : false,
+                    defaultValue: 1 
                 },
                 token: {
                     type: Sequelize.STRING(400),
@@ -68,6 +83,6 @@ module.exports = class User extends Sequelize.Model {
         );
     }
     static associate(db) {
-        //테이블과 테이블의 관계를 설정
+
     }
 };

@@ -18,7 +18,7 @@ const userRouter = require("./routes/user");
 
 // 시퀄라이즈 연결
 sequelize
-    .sync({ force: false })
+    .sync({ force: true })
     .then(() => {
         console.log("DB Connected Success");
     })

@@ -4,7 +4,7 @@ const { Lecture } = require("../models");
 
 module.exports = {
     loadMajor: () => {
-        const filePath = path.join(__dirname, "electives_20.json");
+        const filePath = path.join(__dirname, "electives_22.json");
         const fileData = fs.readFileSync(filePath).toString();
         const data = JSON.parse(fileData);
 
