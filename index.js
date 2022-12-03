@@ -15,16 +15,20 @@ const app = express();
 
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
+const { loadMajor } = require("./db/loadLecture");
 
 // 시퀄라이즈 연결
 sequelize
-    .sync({ force: true })
+     .sync()
     .then(() => {
         console.log("DB Connected Success");
+        loadMajor();
     })
     .catch((err) => {
         console.error(err);
     });
+
+
 
 app.use(
     cors({

@@ -68,6 +68,11 @@ module.exports = class User extends Sequelize.Model {
                     type: Sequelize.STRING(400),
                     allowNull: true,
                 },
+                score: {
+                    type: Sequelize.INTEGER(20),
+                    allowNull: false,
+                    defaultValue: 0
+                }
             },
             {
                 // 테이블에 대한 설정 지정

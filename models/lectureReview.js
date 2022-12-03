@@ -22,8 +22,8 @@ module.exports = class LectureReview extends Sequelize.Model {
                 },
                 level: {
                     type: Sequelize.STRING(50),
-                    allowNull: false,
-                    comment: "난이도"
+                    allowNull: false, 
+                    comment: "난이도" // 상, 중, 하
                 },
                 detail: {
                     type: Sequelize.STRING(500),

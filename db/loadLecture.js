@@ -4,10 +4,10 @@ const { Lecture } = require("../models");
 
 module.exports = {
     loadMajor: () => {
-        const filePath = path.join(__dirname, "electives_22.json");
+        const filePath = path.join(__dirname, "lecture_22.json");
         const fileData = fs.readFileSync(filePath).toString();
         const data = JSON.parse(fileData);
-
+        // findOne 하기,,,
         for (let i = 0; i < data.length; i++) {
             for (let j = 0; j < data[i].length; j++) {
                 Lecture.create({
