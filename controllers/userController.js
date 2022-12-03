@@ -23,7 +23,7 @@ module.exports = {
             });
         }
     },
-    //TODO 학기 선택 request 추가 + schedule Cashing
+
     getSchedule: async (req, res) => {
         console.log(`userId ? ${req.userId}`);
         try {
