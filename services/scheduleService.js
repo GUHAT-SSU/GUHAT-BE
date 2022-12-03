@@ -5,12 +5,8 @@ module.exports = {
         try {
             for (let i = 0; i < schedule.length; i++) {
                 const semesterSchedule = schedule[i];
-                console.log("sememester ---------------- ");
-                console.log(semesterSchedule);
                 for (let j = 0; j < semesterSchedule.data.length; j++) {
                     const item = semesterSchedule.data[j];
-                    console.log("item ---------------- ");
-                    console.log(item);
                     for (let k = 0; k < item.length; k++) {
                         if (item[k] !== null)
                             Schedule.create({
@@ -39,6 +35,24 @@ module.exports = {
         try {
             const res = await Schedule.findAll({
                 where: { user_id: userId },
+            }).catch((err) => {
+                console.log(err);
+            });
+            res.forEach((element) => {
+                schedules.push(element);
+            });
+            return schedules;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    },
+
+    findDetailSchedule: async (userId, year, semester) => {
+        const schedules = [];
+        try {
+            const res = await Schedule.findAll({
+                where: { user_id: userId, year: year, semester: semester },
             }).catch((err) => {
                 console.log(err);
             });

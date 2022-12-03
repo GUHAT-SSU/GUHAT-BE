@@ -5,13 +5,10 @@ const puppeteer = require("puppeteer");
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let browser = null;
 
-const usaintLogin = async (req, res) => {
-    const id = req.body.userId;
-    const pw = req.body.password;
-
+const usaintLogin = async (id, pw) => {
     // const id = "20201725";
     // const pw = "kimhyomin667~";
-
+    console.log(id + pw);
     browser = await puppeteer.launch({
         headless: false,
         args: [
@@ -43,32 +40,29 @@ const usaintLogin = async (req, res) => {
         await page.focus("#pwd");
         await page.keyboard.type(pw);
         await page.click(".btn_login");
-        let flag = false;
         page.on("dialog", (dialog) => {
             console.log("Dialog is up...");
             delay(1000);
             console.log("Accepted..." + dialog.message());
             //SAP NetWeaver - 로그온 준비 중입니다.
             dialog.accept();
-            res.status(400).json({ message: dialog.message() });
-            flag = true;
+
+            const res = { ok: false, message: dialog.message() };
+
             page.close();
-            return;
+            return res;
         });
         await page.waitForNavigation({ timeout: 10000 });
         page.close();
-        return true;
+        return { ok: true, message: "usaint login success" };
     } catch (e) {
         console.log(e);
-        return false;
+        return { ok: false, message: e.mesage };
     }
 };
 
-const getProfile = async (req, res) => {
+const getProfile = async (id, pw) => {
     let result = true;
-
-    const id = req.body.id;
-    const pw = req.body.pw;
 
     try {
         const page2 = await browser.newPage();
@@ -87,7 +81,7 @@ const getProfile = async (req, res) => {
         await page2.waitForSelector("#WD8E").catch((e) => {
             console.log("페이지 오류" + e.message);
             page2.clolse();
-            return res.status(500).json({ message: "잘못된 페이지 접근" });
+            return { ok: false, message: "잘못된 페이지 접근" };
         });
 
         const entranceYear = await page2.evaluate(
@@ -135,12 +129,16 @@ const getProfile = async (req, res) => {
         };
         await page2.close();
         await browser.close();
-        return res.status(200).json({ entrance });
+        return {
+            ok: true,
+            data: entrance,
+            message: "[Succes] usaint parsing ",
+        };
     } catch (error) {
         console.log(error);
         await page2.close();
         await browser.close();
-        return res.status(400).json("parsing error");
+        return { ok: false, message: "[Fail] usaint parsing error" };
     }
 };
 
