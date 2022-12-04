@@ -21,6 +21,10 @@ module.exports = class Schedule extends Sequelize.Model {
                     type: Sequelize.STRING(30),
                     allowNull: true,
                 },
+                day: {
+                    type: Sequelize.STRING(10),
+                    allowNull: true,
+                },
                 time: {
                     type: Sequelize.STRING(30),
                     allowNull: true,
@@ -44,7 +48,7 @@ module.exports = class Schedule extends Sequelize.Model {
     }
     static associate(db) {
         db.User.hasMany(db.Schedule, {
-            foreignKey: {name: "user_id", type: DataTypes.STRING},
+            foreignKey: { name: "user_id", type: DataTypes.STRING },
             sourceKey: "id",
             paranoid: true,
         });
