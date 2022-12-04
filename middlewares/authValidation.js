@@ -6,15 +6,8 @@ const authChecker = async (req, res, next) => {
     if (req.headers.authorization) {
         const token = req.headers.authorization.split("Bearer ")[1];
 
-        // const authResult = verify(token, process.env.JWT_SECRET_KEY, (err) => {
-        //     if (err) {
-        //         res.status(401).json({ error: "Auth Error from authChecker" });
-        //     } else {
-        //         next();
-        //     }
-        // });
         const decoded = jwt.decode(token);
-        const user = await User.findOne({ where: { studentId: decoded.id } });
+        const user = await User.findOne({ where: { id: decoded.id } });
         if (!user) {
             return res.status(401).send({
                 ok: false,
@@ -29,6 +22,7 @@ const authChecker = async (req, res, next) => {
                 message: "Auth Error from authChecker",
             });
         } else {
+            req.userId = decoded.id;
             next();
         }
     } else {

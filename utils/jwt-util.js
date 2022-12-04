@@ -12,7 +12,8 @@ module.exports = {
         return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
             // secret으로 sign하여 발급하고 return
             algorithm: "HS256", // 암호화 알고리즘
-            expiresIn: "1h", // 유효기간
+            //expiresIn: "1h", // 유효기간
+            expiresIn: "10000",
         });
     },
     verify: (token) => {
@@ -37,7 +38,8 @@ module.exports = {
         return jwt.sign({}, process.env.JWT_SECRET_KEY, {
             // refresh token은 payload 없이 발급
             algorithm: "HS256",
-            expiresIn: "2h",
+            expiresIn: "30000",
+            //  expiresIn: "2h",
         });
     },
     refreshVerify: async (token, studentId) => {

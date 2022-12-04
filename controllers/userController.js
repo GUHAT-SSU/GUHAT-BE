@@ -1,21 +1,21 @@
 const {
-    authLogin,
+    usaintLogin,
     getProfile,
-    toSchedulePage,
+    getSchedule,
 } = require("../utils/crawling-util");
+const userService = require("../services/userService");
+
+const scheduleService = require("../services/scheduleService");
 
 module.exports = {
-    //TODO DB MODEL 과 연동하기 + Cashing
     getUserInfo: async (req, res) => {
         try {
-            const result = await authLogin(req, res);
-            if (!result) {
-                return res.status(401).send({
-                    ok: false,
-                    message: "No authorized!",
-                });
-            }
-            await getProfile(req, res);
+            const id = req.userId;
+            const user = await userService.findUserById(id);
+            return res.status(200).send({
+                ok: true,
+                data: user,
+            });
         } catch (error) {
             return res.status(400).send({
                 ok: false,
@@ -23,29 +23,19 @@ module.exports = {
             });
         }
     },
-    //TODO 학기 선택 request 추가 + schedule Cashing
+
     getSchedule: async (req, res) => {
+        console.log(`userId ? ${req.userId}`);
         try {
-            const result = await authLogin(req, res);
-            if (!result) {
-                return res.status(401).send({
-                    ok: false,
-                    message: "No authorized!",
-                });
-            }
-            const schedule = await toSchedulePage(req, res);
-            if (!schedule) {
-                return res.status(500).send({
-                    ok: false,
-                    message: "Schedule parsing error!",
-                });
-            } else {
-                return res.status(200).send({
-                    ok: true,
-                    message: "success to parsing schedule",
-                    data: schedule,
-                });
-            }
+            const result = await scheduleService.findScheduleByUserId(
+                req.userId
+            );
+            console.log(`userSchedule : ${result}`);
+            return res.status(200).send({
+                ok: true,
+                message: "success to load schedule",
+                data: result,
+            });
         } catch (error) {
             return res.status(400).send({
                 ok: false,
