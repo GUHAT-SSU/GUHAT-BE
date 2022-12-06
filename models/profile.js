@@ -25,6 +25,11 @@ module.exports = class Profile extends Sequelize.Model {
                     type: Sequelize.STRING(100),
                     allowNull: true,
                     comment: "한줄소개"
+                },
+                skill: {
+                    type: Sequelize.JSON,
+                    allowNull: true,
+                    comment: "스킬"
                 }
 
             },

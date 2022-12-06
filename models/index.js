@@ -23,22 +23,20 @@ const LectureReviewLike = require("./lectureReviewLike");
 const LectureReviewFile = require("./lectureReviewFile");
 
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || "development";
+const env = process.env.NODE_ENV || "test";
 const config = require(__dirname + "/../config/config.json")[env];
 
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
-    sequelize = new Sequelize(env, config);
-} else {
+if (config) {
     sequelize = new Sequelize(
         config.database,
         config.username,
         config.password,
         config
     );
-}
+};
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
