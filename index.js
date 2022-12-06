@@ -11,14 +11,15 @@ const PORT = 8001;
 const app = express();
 
 const userRouter = require("./routes/user");
-const { loadMajor } = require("./db/loadLecture");
+const postRouter = require("./routes/posting");
+const homeRouter = require("./routes/home");
 
 // 시퀄라이즈 연결
 sequelize
-     .sync()
+    .sync()
     .then(() => {
         console.log("DB Connected Success");
-        loadMajor();
+        // loadMajor();
     })
     .catch((err) => {
         console.error(err);
@@ -41,6 +42,8 @@ app.use(passport.initialize());
 app.set("port", process.env.PORT || PORT);
 
 app.use("/user", userRouter);
+app.use("/posting", postRouter);
+app.use("/home", homeRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
