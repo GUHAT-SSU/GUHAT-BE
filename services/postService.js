@@ -5,7 +5,6 @@ module.exports = {
     /* ------ POST : 게시물 생성 ------ */
     createPost: async (userId, body) => {
         try {
-            
             const newPost = await LecturePost.create({
                 id: body.id,
                 title : body.title,
@@ -40,7 +39,11 @@ module.exports = {
             }
         } catch(err) {
             console.log(err);
-            throw Error(err);
+            return {
+                type: "Error",
+                statusCode: 500,
+                message: err.toString()
+            }
         }
         
     },

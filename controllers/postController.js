@@ -15,9 +15,11 @@ module.exports = {
             // 객체 postService로 보내기(lecturePost 생성)
             const {type, message, statusCode, postId} = await postService.createPost(userId, post);
 
-            
+            if (type === 'Error') {
+                return res.status(statusCode).json({type, message});
+            }
             // 성공 시 lecturePost 의 id인 postId 보내기
-            return res.status(200).json({type, message, postId});
+            return res.status(statusCode).json({type, message, postId});
             
          } catch (err) {
             return res.status(500).json(err);
