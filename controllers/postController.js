@@ -1,4 +1,4 @@
-postService = require('../services/postService');
+const postService = require('../services/postService');
 
 module.exports = {
     // POST '/posting/lecture' 구인글 작성
