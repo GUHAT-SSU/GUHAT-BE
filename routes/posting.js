@@ -6,7 +6,7 @@ const router = express.Router();
 
 console.log("conneceted router posting");
 router.post("/lecture", authChecker, postController.createPost); // (check) 구인글 작성
-// router.post("/lecture/apply", authChecker, postController.apply);
+router.post("/lecture/apply", authChecker, postController.apply); 
 
 // router.get("/lecture/all", authChecker, postController.getAllPost); // 구인글 리스트 조회
 router.get("/lecture", authChecker, postController.getMyPost); // (check) 작성한 구인글 상세 조회

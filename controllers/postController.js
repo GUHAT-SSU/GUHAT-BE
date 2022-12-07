@@ -13,13 +13,13 @@ module.exports = {
                 res.send(404).send({message: 'cannot get body....'})
             }
             // 객체 postService로 보내기(lecturePost 생성)
-            const {type, message, statusCode, postId} = await postService.createPost(userId, post);
+            const {type, message, postId} = await postService.createPost(userId, post);
 
             if (type === 'Error') {
-                return res.status(statusCode).json({type, message});
+                return res.status(500).json({type, message});
             }
             // 성공 시 lecturePost 의 id인 postId 보내기
-            return res.status(statusCode).json({type, message, postId});
+            return res.status(200).json({type, message, postId});
             
          } catch (err) {
             return res.status(500).json(err);
@@ -36,12 +36,12 @@ module.exports = {
                 res.send(404).send({message: 'cannot get postId or roleId....'});
             }
 
-            userInfo = await postService.apply(userId, postId, roleId);
-            return res.status(200).json({
-                ok:true,
-                message: "지원 완료",
-                userInfo: userInfo
-            });
+            const {type, message, applierId} = await postService.apply(userId, postId, roleId);
+
+            if (type === 'Error') {
+                return res.status(500).json({type, message});
+            }
+            return res.status(200).json({type, message, userId, applierId});
 
         } catch (err) {
             return res.status(500).json(err);

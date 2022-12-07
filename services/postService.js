@@ -33,7 +33,6 @@ module.exports = {
             console.log(newPost.id);
             return {
                 type: "Success",
-                statusCode: 200,
                 message: "You successfully created a new post!",
                 postId: newPost.dataValues.id
             }
@@ -41,42 +40,55 @@ module.exports = {
             console.log(err);
             return {
                 type: "Error",
-                statusCode: 500,
                 message: err.toString()
             }
         }
         
     },
+    /* ------ POST : 게시물 생성 끝 ------ */
     /* ------- POST : 팀플 지원하기 ------- */
     apply: async (userId, postId, roleId) => {
         try{
-            const existApplier = await RoleApplier.findAll();
-
+            // 이 포스트에 있는 기존 지원자 리스트 가져오기
+            const existApplier = await RoleApplier.findAll({
+                where: {
+                    lecturePost_id: postId
+                }
+            });
+    
+            // 지원하기를 두 번 눌렀을 경우
             for(let a = 0; a < existApplier.length; a++) {
-                if(existApplier[a].user_id == user_id) {
-                    throw new Error("RoleApplier already exists");
+                if(existApplier[a].user_id == userId) {
+                    return {
+                        type: "Error",
+                        message: "User already applied to this post!"
+                    }
                 }   
             }
+            // 새 지원자 생성
             const newApplier = await RoleApplier.create({
                 group_id: roleId,
                 user_id: userId,
                 lecturePost_id: postId
             });
             console.log("newApplier exists? : " , newApplier.id);
-
-
             return {
                 type: 'Success',
+                statusCode: 200,
+                message: "You successfully applied to the lecture!",
                 userId: userId,
                 applierId: newApplier.id
             };
-            
         }catch(err) {
             console.log(err);
-            throw Error(err);
+            return {
+                type: "Error",
+                message: err.toString()
+            }
         }
     },
-    // GET : 구인글 리스트 조회
+    /* ------- POST : 팀플 지원하기 ------- */
+    /* ------- GET : 구인글 리스트 모두 조회 -------- */
     findPosts: async (sort) => {
         try{
             posts = await LecturePost.findAll();
@@ -146,6 +158,7 @@ module.exports = {
             throw Error(err);
         }
     },
+    /* ------- GET : 구인글 리스트 모두 조회 끝 -------- */
     // GET : 작성한 구인글 리스트 조회
     findMyPosts: async (writer_id, sort) => {
         try{
