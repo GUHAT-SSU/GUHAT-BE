@@ -1,26 +1,34 @@
 
 const { LecturePost, Lecture, User, Role, RoleApplier, Post} = require("../models");
-const { findUserById } = require("./userService");
 
 module.exports = {
     // POST : 게시물 생성
     createPost: async (userId, body) => {
         try {
+            
             const newPost = await LecturePost.create({
                 id: body.id,
                 title : body.title,
                 endDate: body.endDate,
                 detail: body.detail,
                 priority: body.priority,
-                charLink: body.chatLink,
+                chatLink: body.chatLink,
                 viewCnt: body.viewCnt,
                 status: body.status,
                 period: body.period,
                 //외래키
                 writer_id: userId,
                 lecture_id: body.lecture_id,
-                // role 추가
             });
+            console.log("body.role", body.role.length);
+            for(let r = 0; r < body.role.length; r++) {
+                const newRole = await Role.create({
+                    name: body.role[r].name,
+                    max: body.role[r].max
+                })
+                // console.log("role exists? : ");
+                // console.log(newRole.id);
+            }
             console.log("newPost exists? : ");
             console.log(newPost.id);
             return newPost.dataValues;
