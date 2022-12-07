@@ -24,7 +24,8 @@ module.exports = {
             for(let r = 0; r < body.role.length; r++) {
                 const newRole = await Role.create({
                     name: body.role[r].name,
-                    max: body.role[r].max
+                    max: body.role[r].max,
+                    lecturePost_id: newPost.id
                 })
                 // console.log("role exists? : ");
                 // console.log(newRole.id);
