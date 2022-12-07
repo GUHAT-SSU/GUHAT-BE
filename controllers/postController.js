@@ -25,7 +25,8 @@ module.exports = {
             return res.status(500).json(err);
          }
     },
-    /* ----- POST '/posting/lecture/apply' 지원하기 ------- */
+    /* ------- POST '/posting/lecture' 구인글 작성 끝 ------- */
+    /* ------- POST '/posting/lecture/apply' 지원하기 ------- */
     apply: async(req,res) => {
         try{
             const userId = req.userId;
@@ -47,7 +48,8 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
-    // GET '/posting/lecture?sort={option}' 구인글 리스트 조회
+    /* ------------ POST '/posting/lecture/apply' 지원하기 끝 ----------- */
+    /* ---- GET '/posting/lecture?sort={option}' 구인글 리스트 조회 ----- */
     getAllPost: async(req,res) => {
         console.log("d여기?");
         try {
@@ -72,7 +74,8 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
-    // GET '/posting/lecture?writerId={userId}&sort={option}' 작성한 구인글 상세조회
+    /* ------------- GET '/posting/lecture?sort={option}' 구인글 리스트 조회 끝 -------------- */
+    /* ---- GET '/posting/lecture?writerId={userId}&sort={option}' 작성한 구인글 상세조회 ---- */
     getMyPost: async(req,res) => {
         try {
             // 쿼리스트링에서 유저 id 가져오기

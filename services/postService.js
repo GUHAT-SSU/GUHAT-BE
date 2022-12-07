@@ -159,7 +159,7 @@ module.exports = {
         }
     },
     /* ------- GET : 구인글 리스트 모두 조회 끝 -------- */
-    // GET : 작성한 구인글 리스트 조회
+    /* ------- GET : 작성한 구인글 리스트 조회 --------- */
     findMyPosts: async (writer_id, sort) => {
         try{
             // writer_id == writer_id 인 LecturePost들 가져오기
@@ -232,5 +232,5 @@ module.exports = {
             throw Error(err);
         }
     },
-    // 다른 function
+    /* ------- GET : 작성한 구인글 리스트 조회 --------- */
 }
