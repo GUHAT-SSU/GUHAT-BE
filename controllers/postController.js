@@ -1,7 +1,7 @@
 const postService = require('../services/postService');
 
 module.exports = {
-    // POST '/posting/lecture' 구인글 작성
+    /* ------- POST '/posting/lecture' 구인글 작성 ------- */
     createPost: async(req,res) => {
          try {
             // Request Body에서 객체 가져오기
@@ -13,32 +13,32 @@ module.exports = {
                 res.send(404).send({message: 'cannot get body....'})
             }
             // 객체 postService로 보내기(lecturePost 생성)
-            const postResponse = await postService.createPost(userId, post);
+            const {type, message, statusCode, postId} = await postService.createPost(userId, post);
+
+            
             // 성공 시 lecturePost 의 id인 postId 보내기
-            return res.status(200).json({
-                postId: postResponse.id
-            })
+            return res.status(200).json({type, message, postId});
             
          } catch (err) {
             return res.status(500).json(err);
          }
     },
-    // POST '/posting/lecture/apply' 지원하기
+    /* ----- POST '/posting/lecture/apply' 지원하기 ------- */
     apply: async(req,res) => {
         try{
-            const userId = req.body.userId;
+            const userId = req.userId;
             const postId = req.body.postId;
             const roleId = req.body.roleId;
-            if(!userId || !postId || !roleId) {
-                res.send(404).send({message: 'cannot get body....'});
+
+            if(!postId || !roleId) {
+                res.send(404).send({message: 'cannot get postId or roleId....'});
             }
-            // postService로 보내기(lectureProjectMember 테이블에 데이터 추가)
-            postInfo = await postService.apply(userId, postId, roleId);
-            // 성공 시 게시물에 대한 정보 보내주기
+
+            userInfo = await postService.apply(userId, postId, roleId);
             return res.status(200).json({
                 ok:true,
                 message: "지원 완료",
-                data: postInfo
+                userInfo: userInfo
             });
 
         } catch (err) {

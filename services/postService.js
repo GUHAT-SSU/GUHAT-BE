@@ -1,8 +1,8 @@
 
-const { LecturePost, Lecture, User, Role, RoleApplier, Post} = require("../models");
+const { LecturePost, Lecture, User, Role, RoleApplier} = require("../models");
 
 module.exports = {
-    // POST : 게시물 생성
+    /* ------ POST : 게시물 생성 ------ */
     createPost: async (userId, body) => {
         try {
             
@@ -32,40 +32,42 @@ module.exports = {
             }
             console.log("newPost exists? : ");
             console.log(newPost.id);
-            return newPost.dataValues;
+            return {
+                type: "Success",
+                statusCode: 200,
+                message: "You successfully created a new post!",
+                postId: newPost.dataValues.id
+            }
         } catch(err) {
             console.log(err);
             throw Error(err);
         }
         
     },
-    // POST : 팀플 지원하기
+    /* ------- POST : 팀플 지원하기 ------- */
     apply: async (userId, postId, roleId) => {
         try{
-            // RoleApplier의 user_id, group_id, lecturePost_id 속성에 매개변수 값 추가
-            const newApplier = await new RoleApplier.create({
+            const existApplier = await RoleApplier.findAll();
+
+            for(let a = 0; a < existApplier.length; a++) {
+                if(existApplier[a].user_id == user_id) {
+                    throw new Error("RoleApplier already exists");
+                }   
+            }
+            const newApplier = await RoleApplier.create({
                 group_id: roleId,
                 user_id: userId,
                 lecturePost_id: postId
             });
-            console.log("newApplier exists? : " + newApplier instanceof RoleApplier);
-            const post = await LecturePost.findByPk(postId);
-            const writer = await User.findByPk(userId);
-            const lecture = await Lecture.findByPk(post.lecture_id);
+            console.log("newApplier exists? : " , newApplier.id);
+
+
             return {
-                title: post.title,
-                writer: writer.nickname,
-                writerLevel: writer.level,
-                lectureTitle: lecture.name,
-                viewCnt: post.viewCnt,
-                endDate: post.endDate,
-                status: post.status,
-                lectureName: lecture.name,
-                professor: lecture.professor,
-                schedule: lecture.schedule,
-                createdAt: post.createdAt,
-                // 지원 현황 추가
-            }
+                type: 'Success',
+                userId: userId,
+                applierId: newApplier.id
+            };
+            
         }catch(err) {
             console.log(err);
             throw Error(err);
