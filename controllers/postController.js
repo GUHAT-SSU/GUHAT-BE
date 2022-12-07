@@ -1,6 +1,4 @@
-//const  canTreatArrayAsAnd = require('sequelize/types/utils');
-
-const postService = require('../services/postService');
+postService = require('../services/postService');
 
 module.exports = {
     // POST '/posting/lecture' 구인글 작성
