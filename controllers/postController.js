@@ -51,21 +51,20 @@ module.exports = {
     /* ------------ POST '/posting/lecture/apply' 지원하기 끝 ----------- */
     /* ---- GET '/posting/lecture?sort={option}' 구인글 리스트 조회 ----- */
     getAllPost: async(req,res) => {
-        console.log("d여기?");
         try {
             // 쿼리스트링에서 sort 옵션 가져오기
             const sort = req.query.sort;
             console.log(req.query);
-            if(!(sort == 'latest') && !(sort == 'popular') && !(sort == 'level')) {
+            if((!sort == null) && !(sort == 'latest') && !(sort == 'popular') && !(sort == 'level')) {
                 return res.status(404).send({message: '그런 sort는 없습니다........'});
             }
 
             // postService로 보내기
-            const posts = await postService.findAllPosts(writer_id, sort)
+            const posts = await postService.findAllPosts(sort);
 
             return res.status(200).json({
                 ok:true,
-                message:"유저 포스트 가져오기 성공!",
+                message:"모든 포스트 가져오기 성공!",
                 data: {
                     posts
                 }
@@ -75,7 +74,7 @@ module.exports = {
         }
     },
     /* ------------- GET '/posting/lecture?sort={option}' 구인글 리스트 조회 끝 -------------- */
-    /* ---- GET '/posting/lecture?writerId={userId}&sort={option}' 작성한 구인글 상세조회 ---- */
+    /* ---- GET '/posting/lecture/my?writerId={userId}&sort={option}' 작성한 구인글 상세조회 ---- */
     getMyPost: async(req,res) => {
         try {
             // 쿼리스트링에서 유저 id 가져오기
@@ -87,7 +86,7 @@ module.exports = {
             // 쿼리스트링에서 sort 옵션 가져오기
             const sort = req.query.sort;
             console.log("sort : " + sort);
-            if(!(sort === 'latest') && !(sort === 'popular')) {
+            if((!sort == null) && !(sort === 'latest') && !(sort === 'popular')) {
                return  res.status(404).send({message: '그런 sort는 없습니다........'});
             }
 
@@ -106,20 +105,25 @@ module.exports = {
         }
 
     },
-    // GET '/posting/lecture/:postId' 구인글 상세 조회
+    /* ---- GET '/posting/lecture?writerId={userId}&sort={option}' 작성한 구인글 상세조회 ---- */
+    /* ---------------- GET '/posting/lecture/:postId' 구인글 상세 조회 ---------------------- */
     getPosting: async(req,res) => {
 
     },
-    // GET '/posting/lecture/member?status={option} && writerId ={userId} && postId={postId}' 작성한 구인글 지원자 리스트 조회
+    /* ------------------------------ GET '/posting/lecture/:postId' 구인글 상세 조회 끝 ------------------------------------- */
+    /* GET '/posting/lecture/member?status={option} && writerId ={userId} && postId={postId}' 작성한 구인글 지원자 리스트 조회 */
     getAllAppliers: async(req,res) => {
         
     },
-    // GET '/posting/lecture/apply?userId={userId}' 내가 작성한 구인글 리스트 조회
+    /* GET '/posting/lecture/member?status={option} && writerId ={userId} && postId={postId}' 작성한 구인글 지원자 리스트 조회 끝 */
+    /* ------------------- GET '/posting/lecture/apply?userId={userId}' 내가 작성한 구인글 리스트 조회 -------------------------- */
     getMyApplyPosting: async(req,res) => {
 
     },
-    // PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경
+    /* ------------------- GET '/posting/lecture/apply?userId={userId}' 내가 작성한 구인글 리스트 조회 끝 ------------------------ */
+    /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 ----------------- */
     updateApplyStatus: async(req,res) => {
 
     }
+    /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 끝 ----------------- */
 }

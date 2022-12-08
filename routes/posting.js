@@ -6,10 +6,10 @@ const router = express.Router();
 
 console.log("conneceted router posting");
 router.post("/lecture", authChecker, postController.createPost); // (check) 구인글 작성
-router.post("/lecture/apply", authChecker, postController.apply); 
+router.post("/lecture/apply", authChecker, postController.apply);  // (check) 구인글 작성
 
-// router.get("/lecture/all", authChecker, postController.getAllPost); // 구인글 리스트 조회
-router.get("/lecture", authChecker, postController.getMyPost); // (check) 작성한 구인글 상세 조회
+router.get("/lecture/all", authChecker, postController.getAllPost); // 구인글 리스트 조회
+router.get("/lecture/my", authChecker, postController.getMyPost); // (check) 작성한 구인글 상세 조회
 // router.get("/lecture/:postId", authChecker, postController.getPosting); // 구인글 상세 조회
 // router.get("/lecture/member", authChecker, postController.getAllAppliers); // 작성한 구인글 지원자 리스트 조회
 // router.get("/lecture/apply", authChecker, postController.getMyApplyPosting); // 내가 지원한 구인글 리스트 조회

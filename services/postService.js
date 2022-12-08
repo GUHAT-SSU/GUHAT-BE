@@ -21,6 +21,7 @@ module.exports = {
             });
             console.log("body.role", body.role.length);
             for(let r = 0; r < body.role.length; r++) {
+                // 새 그룹 생성
                 const newRole = await Role.create({
                     name: body.role[r].name,
                     max: body.role[r].max,
@@ -46,7 +47,7 @@ module.exports = {
         
     },
     /* ------ POST : 게시물 생성 끝 ------ */
-    /* ------- POST : 팀플 지원하기 ------- */
+    /* ------ POST : 팀플 지원하기 ------- */
     apply: async (userId, postId, roleId) => {
         try{
             // 이 포스트에 있는 기존 지원자 리스트 가져오기
@@ -87,41 +88,49 @@ module.exports = {
             }
         }
     },
-    /* ------- POST : 팀플 지원하기 ------- */
+    /* ---------- POST : 팀플 지원하기 끝 ----------- */
     /* ------- GET : 구인글 리스트 모두 조회 -------- */
-    findPosts: async (sort) => {
+    findAllPosts: async (sort) => {
         try{
-            posts = await LecturePost.findAll();
-            data_list = [];
+            const result = await LecturePost.findAll();
+            const data_list = [];
+
+            const posts = result.map( res => res.dataValues);
             // lecture_id가 id인 과목 가져오기
-            for (let post of posts) {
-                lecture = Lecture.filter((item) => {  
-                    return item.id == post.lecture_id;
-                })[0];
-                writer = User.filter((item) => {
-                    return item.id == post.writer_id;
-                })[0];
-                dataList.push({
-                    title: post.title,
-                    writer: writer.nickname, // 작성자 닉네임,
+            for (let p = 0; p < posts.length; p++) {
+                console.log(posts[p]);
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: posts[p].lecture_id
+                    }
+                });
+
+                const writer = await User.findOne({
+                    where: {id: posts[p].writer_id}
+                });
+
+                data_list.push({
+                    postId: posts[p].id, 
+                    title: posts[p].title,
+                    writer: writer.nickname,
                     writerLevel: writer.level,
-                    viewCnt: post.viewCnt,
-                    endDate: post.endDate,
-                    status: post.status,
+                    viewCnt: posts[p].viewCnt,
+                    endDate: posts[p].endDate,
+                    status: posts[p].status,
                     lectureName: lecture.name,
                     professor: lecture.professor,
                     schedule: lecture.schedule,
-                    createdAt: post.createdAt
+                    createdAt: posts[p].createdAt
                 })
             }
             // sort 옵션별로 변수 지정
-            sorted_list = data_list.sort(function(a, b) {
+            const sorted_list = data_list.sort(function(a, b) {
                 if(sort === "popular") { // 조회순
                     if(a.viewCnt > b.viewCnt) {
-                        return 1; 
+                        return -1; 
                     }
                     else if(a.viewCnt < b.viewCnt) {
-                        return -1;
+                        return 1;
                     }
                     else {
                         return 0;
@@ -186,6 +195,7 @@ module.exports = {
                 });
                 console.log("이거야 : " + writer);
                 data_list.push({
+                    postId: post.id, 
                     title: post.title,
                     writer: writer.nickname, // 작성자 닉네임,
                     writerLevel: writer.level,
@@ -202,10 +212,10 @@ module.exports = {
             const sorted_list = data_list.sort(function(a, b) {
                 if(sort === "popular") { // 조회순
                     if(a.viewCnt > b.viewCnt) {
-                        return 1; 
+                        return -1; 
                     }
                     else if(a.viewCnt < b.viewCnt) {
-                        return -1;
+                        return 1;
                     }
                     else {
                         return 0;
@@ -229,7 +239,10 @@ module.exports = {
             
         } catch(err) {
             console.log(err);
-            throw Error(err);
+            return {
+                type: "Error",
+                message: err.toString()
+            }
         }
     },
     /* ------- GET : 작성한 구인글 리스트 조회 --------- */
