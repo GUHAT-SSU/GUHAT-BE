@@ -4,7 +4,6 @@ const { LecturePost, Lecture, User, Role, RoleApplier, UserProfileImg} = require
 module.exports = {
     findLecturePosts: async (userId) => {
         try{
-            console.log("start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             let major;
             /*
             * LecturePost 에서 가져와야 하는 것 : lecture_id, writer_id, endDate, title, detail, viewCnt
@@ -28,8 +27,6 @@ module.exports = {
                 return res.dataValues
             })   
            })
-           console.log("lecturePosts : ", lecturePosts);
-           //const lecturePosts = result.map( res => res.dataValues);
 
            const data_list = [];
 
@@ -42,15 +39,16 @@ module.exports = {
                         id: lecturePost.lecture_id
                     }
                 })
-                console.log("finded lecture.major : ", lecture.major);
-                
+                .then((result) => {
+                    return result.dataValues
+                })
+                console.log(lecture.univ);
                 // major 항목이 null -> elective / null이 아니면 -> major 를 반환
-                if(lecture.major == null) {
+                if(lecture.univ == "교양필수" || lecture.univ == "교양선택") {
                     major = "elective" 
                 } else {
                     major = "major"
                 }
-                console.log("major : " + major);
 
                 // 유저 찾아서 프로필 이미지 가져오기
                 const writer = await User.findByPk(userId);
