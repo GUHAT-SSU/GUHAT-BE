@@ -98,7 +98,7 @@ module.exports = {
             let limit = 10;
             let offset = 0; 
             if(page > 1) {
-                offset = 10 * (page - 1);
+                offset = limit * (page - 1);
             }
 
             // 구인글 모두 가져오기
@@ -189,80 +189,97 @@ module.exports = {
     },
     /* ------- GET : 구인글 리스트 모두 조회 끝 -------- */
     /* ------- GET : 작성한 구인글 리스트 조회 --------- */
-    findMyPosts: async (writer_id, sort) => {
+    findMyPosts: async (writer_id, page) => {
         try{
-            // writer_id == writer_id 인 LecturePost들 가져오기
-            const data_list = [];
-            // lecture_id가 id인 과목 가져오기
-            const result = await LecturePost.findAll({
-                where : {
-                    writer_id : writer_id
-                }
-            })
-            const posts = result.map( res => res.dataValues );
-          
-            for(let p = 0 ; p < posts.length ; p++){
-                const post = posts[p];
-                console.log(post);
-                const lecture =  await Lecture.findOne({
-                    where : {
-                        id: post.lecture_id
-                    }
-                });
-                console.log("lecture: " + lecture);
-                const writer = await User.findOne({
-                    where: {id: post.writer_id}
-                });
-                console.log("이거야 : " + writer);
-                data_list.push({
-                    postId: post.id, 
-                    title: post.title,
-                    writer: writer.nickname, // 작성자 닉네임,
-                    writerLevel: writer.level,
-                    viewCnt: post.viewCnt,
-                    endDate: post.endDate,
-                    status: post.status,
-                    lectureName: lecture.name,
-                    professor: lecture.professor,
-                    schedule: lecture.schedule,
-                    createdAt: post.createdAt
-                })
+            let major;
+            // pagination
+            let limit = 10;
+            let offset = 0;
+            if(page > 1) {
+                offset = (page - 1) * limit;
             }
-            // sort 옵션별로 변수 지정
-            const sorted_list = data_list.sort(function(a, b) {
-                if(sort === "popular") { // 조회순
-                    if(a.viewCnt > b.viewCnt) {
-                        return -1; 
+            // 내가 작성한 구인글 모두 가져오기
+            const lecturePosts = await LecturePost.findAll({
+                where:  {
+                    writer_id : writer_id,
+                },
+                // pagination
+                offset: offset,
+                limit: limit,
+                order: [['createdAt', 'DESC']] // 최신순
+            }).then((res) => {
+                return res.map((res) => {
+                    return res.dataValues
+                })
+            });
+            const data_list = [];
+          
+            for(let l = 0; l < lecturePosts.length; l++) {
+                const lecturePost = lecturePosts[l];
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: lecturePost.lecture_id
                     }
-                    else if(a.viewCnt < b.viewCnt) {
-                        return 1;
-                    }
-                    else {
-                        return 0;
-                    }
-                }
-                else { // sort === null 이면 최신순
-                    if(a.createdAt > b.createdAt) {
-                        return -1;
-                    }
-                    else if(a.createdAt < b.createdAt) {
-                        return 1;
-                    }
-                    else {
-                        return 0;
-                    }
-                    
-                }
-            })
-            
-            return sorted_list;
+                })
+                .then((result) => {
+                    return result.dataValues;
+                });
+
+                major = await myFindMajor(lecture);
+
+                const writer = await User.findByPk(writer_id);
+                // total : 해당 포스트의 총 지원자 수
+                // current : status == "success"인 사람
+                const total = await RoleApplier.findAndCountAll({
+                    where: {
+                        lecturePost_id: lecturePost.id
+                    },
+                    distinct: true // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                }).then((result) => {
+                    return result.count;
+                })
+                console.log("total : " + total);
+
+                const current = await RoleApplier.findAndCountAll({
+                    where: {
+                        lecturePost_id: lecturePost.id,
+                        status: "success"
+                    },
+                    distinct: true // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                }).then(result => {
+                    return result.count;
+                })
+                // data_list 정리
+                data_list.push({
+                    id: lecturePost.id,
+                    lecture: {
+                        lectureId: lecture.id,
+                        name: lecture.name,
+                        professors: lecture.professor,
+                        semester: lecture.semester,
+                        schedule: lecture.schedule,
+                    },
+                    type: major,
+                    writer: {
+                        studentId: writer.id,
+                        name: writer.name,
+                        nickname: writer.nickname,
+                        level: writer.level,
+                        // profileImg: profileImg.file
+                    },
+                    endDate: lecturePost.endDate,
+                    title: lecturePost.title,
+                    detail: lecturePost.detail,
+                    viewCount: lecturePost.viewCnt,
+                    total: total,
+                    current: current,
+                });
+            }
+            return data_list;
             
         } catch(err) {
             console.log(err);
-            return {
-                type: "Error",
-                message: err.toString()
-            }
+            throw new Error(err);
         }
     },
     /* ------- GET : 작성한 구인글 리스트 조회 끝--------- */
