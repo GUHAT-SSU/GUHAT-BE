@@ -55,6 +55,7 @@ module.exports = {
             // 쿼리스트링에서 sort 옵션 가져오기
             const sort = req.query.sort;
             let page = req.query.page;
+            const userId = req.userId;
 
             if(page == null) {
                 page = 1;
@@ -66,7 +67,7 @@ module.exports = {
             }
 
             // postService로 보내기
-            const data = await postService.findAllPosts(sort, page);
+            const data = await postService.findAllPosts(sort, page, userId);
 
             return res.status(200).json({
                 ok:true,

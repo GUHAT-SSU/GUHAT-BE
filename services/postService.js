@@ -91,8 +91,9 @@ module.exports = {
     },
     /* ---------- POST : 팀플 지원하기 끝 ----------- */
     /* ------- GET : 구인글 리스트 모두 조회 -------- */
-    findAllPosts: async (sort, page) => {
+    findAllPosts: async (sort, page, userId) => {
         try{
+            let isMine = false;
             let major; 
             // pagination
             let limit = 10;
@@ -117,6 +118,10 @@ module.exports = {
 
             for (let l = 0; l < lecturePosts.length; l++) {
                 const lecturePost = lecturePosts[l];
+                // 내가 작성한 구인글 찾기
+                if(userId == lecturePost.writer_id) {
+                    isMine = true;
+                }
                 // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
                 const lecture = await Lecture.findOne({
                     where: {
@@ -174,7 +179,8 @@ module.exports = {
                     detail: lecturePost.detail,
                     viewCount: lecturePost.viewCnt,
                     total: total,
-                    current: current
+                    current: current,
+                    isMine: isMine
                 });
             }
             // sort 옵션별로 변수 지정
