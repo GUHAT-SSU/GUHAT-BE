@@ -49,25 +49,29 @@ module.exports = {
         }
     },
     /* ------------ POST '/posting/lecture/apply' 지원하기 끝 ----------- */
-    /* ---- GET '/posting/lecture?sort={option}' 구인글 리스트 조회 ----- */
+    /* ---- GET '/posting/lecture?sort={option}&page={pageNum}' 구인글 리스트 조회 ----- */
     getAllPost: async(req,res) => {
         try {
             // 쿼리스트링에서 sort 옵션 가져오기
             const sort = req.query.sort;
+            let page = req.query.page;
+
+            if(page == null) {
+                page = 1;
+            }
+
             console.log(req.query);
             if((!sort == null) && !(sort == 'latest') && !(sort == 'popular') && !(sort == 'level')) {
                 return res.status(404).send({message: '그런 sort는 없습니다........'});
             }
 
             // postService로 보내기
-            const posts = await postService.findAllPosts(sort);
+            const data = await postService.findAllPosts(sort, page);
 
             return res.status(200).json({
                 ok:true,
                 message:"모든 포스트 가져오기 성공!",
-                data: {
-                    posts
-                }
+                data
             })
         } catch(err) {
             return res.status(500).json(err);

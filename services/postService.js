@@ -1,5 +1,6 @@
 
 const { LecturePost, Lecture, User, Role, RoleApplier} = require("../models");
+const { myFindMajor, mySort } = require("../utils/myFunction");
 
 module.exports = {
     /* ------ POST : 게시물 생성 ------ */
@@ -90,75 +91,94 @@ module.exports = {
     },
     /* ---------- POST : 팀플 지원하기 끝 ----------- */
     /* ------- GET : 구인글 리스트 모두 조회 -------- */
-    findAllPosts: async (sort) => {
+    findAllPosts: async (sort, page) => {
         try{
-            const result = await LecturePost.findAll();
+            let major; 
+            // pagination
+            let limit = 10;
+            let offset = 0; 
+            if(page > 1) {
+                offset = 10 * (page - 1);
+            }
+
+            // 구인글 모두 가져오기
+            const lecturePosts = await LecturePost.findAll({
+                // pagenation
+                offset: offset,
+                limit: limit,
+                order: [["createdAt", 'DESC']] // 최신순
+            }).then((result) => {
+                return result.map((res) => {
+                    return res.dataValues
+                })
+            });
+
             const data_list = [];
 
-            const posts = result.map( res => res.dataValues);
-            // lecture_id가 id인 과목 가져오기
-            for (let p = 0; p < posts.length; p++) {
-                console.log(posts[p]);
+            for (let l = 0; l < lecturePosts.length; l++) {
+                const lecturePost = lecturePosts[l];
+                // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
                 const lecture = await Lecture.findOne({
                     where: {
-                        id: posts[p].lecture_id
+                        id: lecturePost.lecture_id
                     }
-                });
-
-                const writer = await User.findOne({
-                    where: {id: posts[p].writer_id}
-                });
-
-                data_list.push({
-                    postId: posts[p].id, 
-                    title: posts[p].title,
-                    writer: writer.nickname,
-                    writerLevel: writer.level,
-                    viewCnt: posts[p].viewCnt,
-                    endDate: posts[p].endDate,
-                    status: posts[p].status,
-                    lectureName: lecture.name,
-                    professor: lecture.professor,
-                    schedule: lecture.schedule,
-                    createdAt: posts[p].createdAt
                 })
+                .then((result) => {
+                    return result.dataValues
+                });
+
+                major = await myFindMajor(lecture);
+
+                const writer = await User.findByPk(lecturePost.writer_id);
+
+                // total : 해당 포스트의 총 지원자 수
+                // current : status == "success"인 사람
+                const total = await RoleApplier.findAndCountAll({
+                    where: {
+                        lecturePost_id: lecturePost.id
+                    },
+                    distinct: true // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                })
+                .then((result) => {
+                    return result.count;
+                })
+                const current = await RoleApplier.findAndCountAll({
+                    where: {
+                        lecturePost_id: lecturePost.id,
+                        status: "success"
+                },
+                distinct: true // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                })
+                .then((result) => {
+                    return result.count;
+                })
+                // data_list 정리
+                data_list.push({
+                    id: lecturePost.id,
+                    lecture: {
+                        lectureId: lecture.id,
+                        name: lecture.name,
+                        professors: lecture.professor,
+                        semester: lecture.semester,
+                        schedule: lecture.schedule,
+                    },
+                    type: major,
+                    writer: {
+                        studentId: writer.id,
+                        name: writer.name,
+                        nickname: writer.nickname,
+                        level: writer.level,
+                    },
+                    endDate: lecturePost.endDate,
+                    title: lecturePost.title,
+                    detail: lecturePost.detail,
+                    viewCount: lecturePost.viewCnt,
+                    total: total,
+                    current: current
+                });
             }
             // sort 옵션별로 변수 지정
-            const sorted_list = data_list.sort(function(a, b) {
-                if(sort === "popular") { // 조회순
-                    if(a.viewCnt > b.viewCnt) {
-                        return -1; 
-                    }
-                    else if(a.viewCnt < b.viewCnt) {
-                        return 1;
-                    }
-                    else {
-                        return 0;
-                    }
-                }
-                else if(sort === "level") { // 레벨순
-                    if(a.writerLevel > b.writerLevel) {
-                        return 1;
-                    }
-                    else if(a.writerLevel < b.writerLevel) {
-                        return -1;
-                    }
-                    else {
-                        return 0;
-                    }
-                }
-                else { // sort === null 이면 최신순
-                    if(a.createdAt > b.createdAt) {
-                        return -1;
-                    }
-                    else if(a.createdAt < b.createdAt) {
-                        return 1;
-                    }
-                    else {
-                        return 0;
-                    }   
-                }
-            })
+            const sorted_list = mySort(data_list, sort); 
             
             return sorted_list;
             
@@ -245,5 +265,5 @@ module.exports = {
             }
         }
     },
-    /* ------- GET : 작성한 구인글 리스트 조회 --------- */
+    /* ------- GET : 작성한 구인글 리스트 조회 끝--------- */
 }
