@@ -33,6 +33,7 @@ module.exports = class LecturePost extends Sequelize.Model {
                 viewCnt: {
                     type: Sequelize.INTEGER(100),
                     allowNull: true,
+                    defaultValue: 0,
                     comment: "조회수"
                 }, 
                 status: {

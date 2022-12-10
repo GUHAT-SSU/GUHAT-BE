@@ -28,6 +28,7 @@ module.exports = class LectureReview extends Sequelize.Model {
                 viewCnt: {
                     type: Sequelize.INTEGER(20),
                     allowNull: true,
+                    defaultValue: 0,
                     comment: "조회수"
                 },
                 period: {
