@@ -13,6 +13,7 @@ const app = express();
 const userRouter = require("./routes/user");
 const postRouter = require("./routes/posting");
 const homeRouter = require("./routes/home");
+const profileRouter = require("./routes/profile");
 
 // 시퀄라이즈 연결
 sequelize
@@ -44,6 +45,7 @@ app.set("port", process.env.PORT || PORT);
 app.use("/user", userRouter);
 app.use("/posting", postRouter);
 app.use("/home", homeRouter);
+app.use('/profile', profileRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
