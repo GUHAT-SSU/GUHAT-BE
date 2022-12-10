@@ -15,11 +15,6 @@ module.exports = class LectureReview extends Sequelize.Model {
                     allowNull: false,
                     comment: "필요인원"
                 },
-                term: {
-                    type: Sequelize.STRING(20),
-                    allowNull: false,
-                    comment: "소요기간"
-                },
                 level: {
                     type: Sequelize.STRING(50),
                     allowNull: false, 
@@ -34,6 +29,16 @@ module.exports = class LectureReview extends Sequelize.Model {
                     type: Sequelize.INTEGER(20),
                     allowNull: true,
                     comment: "조회수"
+                },
+                period: {
+                    type: Sequelize.JSON,
+                    allowNull: false,
+                    comment: "예상기간"
+                },
+                topic: {
+                    type: Sequelize.STRING(500),
+                    allowNull: false,
+                    comment: "팀플 주제"
                 }
 
             },
