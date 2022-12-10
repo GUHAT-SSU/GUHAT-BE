@@ -7,13 +7,11 @@ module.exports = {
     createPost: async (userId, body) => {
         try {
             const newPost = await LecturePost.create({
-                id: body.id,
                 title : body.title,
                 endDate: body.endDate,
                 detail: body.detail,
                 priority: body.priority,
                 chatLink: body.chatLink,
-                viewCnt: body.viewCnt,
                 status: body.status,
                 period: body.period,
                 //외래키

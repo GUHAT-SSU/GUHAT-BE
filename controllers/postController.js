@@ -10,7 +10,7 @@ module.exports = {
             const userId = req.userId;
             // 만약 가져오지 못했다면
             if(!post) {
-                res.send(404).send({message: 'cannot get body....'})
+                res.status(404).send({message: 'cannot get body....'})
             }
             // 객체 postService로 보내기(lecturePost 생성)
             const {type, message, postId} = await postService.createPost(userId, post);
