@@ -6,7 +6,7 @@ module.exports = {
     findLecturePosts: async (userId) => {
         try{
             let major;
-            let limit = 10;
+            let limit = 9;
             /*
             * LecturePost 에서 가져와야 하는 것 : lecture_id, writer_id, endDate, title, detail, viewCnt
             * Lecture 에서 가져와야 하는 것: name, professor, semester, schedule, major(null여부) => json.stringify()로 해당 key 값만 넘겨주면 될듯.
@@ -50,12 +50,13 @@ module.exports = {
                 // 유저 찾아서 프로필 이미지 가져오기
                 const writer = await User.findByPk(userId);
                 console.log("writer : " + writer.id);
-
+                
                 const profileImg = await UserProfileImg.findOne({
                     where: {
                         user_id: userId
                     }
                 }); 
+                console.log("profileImg : " + profileImg);
                 console.log("profileImg : " + profileImg.id);
 
                 // total : 해당 포스트의 총 지원자 수
@@ -114,5 +115,14 @@ module.exports = {
             throw Error(err);
         }
     },
+    findReviews: async (userId) => {
+        try {
+            // TODO: 리뷰글 보내주는 로직 작성
+        } catch(err) {
+            console.log(err);
+            throw Error(err);
+        }
+
+    }
 
 }
