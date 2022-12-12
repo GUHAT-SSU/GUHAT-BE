@@ -11,6 +11,54 @@ const {
 const { myFindMajor, mySort } = require("../utils/myFunction");
 
 module.exports = {
+    /* ------- 프로필 최초 생성---- ----- */
+    createProfile: async (userId) => {
+        try {
+            return await Profile.create({
+                detail: "",
+                personality: JSON.stringify([0, 0, 0]),
+                mode: "public",
+                introduction: "",
+                skill: JSON.stringify([]),
+            }).then((res) => res.dataValues);
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
+    /* ------- 프로필 조회 ---- ----- */
+    findProfileByUserId: async (userId) => {
+        try {
+            return await Profile.findOne({ where: { user_id: userId } }).then(
+                (res) => {
+                    console.log(res.dataValues.personality);
+                    if (res)
+                        return {
+                            ...res.dataValues,
+                        };
+                    else res;
+                }
+            );
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
+    /* ------- 프로필 소개란 수정 ---- ----- */
+    updateProfileIntro: async (userId, intro, detail) => {
+        try {
+            return await Profile.update(
+                { detail: detail, introduction: intro },
+                { where: { user_id: userId } }
+            );
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
     /* ------- GET : 작성한 구인글 리스트 조회 --------- */
     findMyPosts: async (writer_id, page) => {
         try {
@@ -105,6 +153,7 @@ module.exports = {
     },
     /* ------- GET : 작성한 구인글 리스트 조회 끝--------- */
 
+    /* ------- GET : 프로필 검색 결과---- ----- */
     findProfileBySkill: async (stack) => {
         try {
             return await Profile.findAll({
