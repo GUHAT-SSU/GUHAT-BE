@@ -15,6 +15,7 @@ const postRouter = require("./routes/posting");
 const homeRouter = require("./routes/home");
 const profileRouter = require("./routes/profile");
 const lectureRouter = require("./routes/lecture");
+const searchRouter = require("./routes/search");
 
 // 시퀄라이즈 연결
 sequelize
@@ -26,8 +27,6 @@ sequelize
     .catch((err) => {
         console.error(err);
     });
-
-
 
 app.use(
     cors({
@@ -46,8 +45,9 @@ app.set("port", process.env.PORT || PORT);
 app.use("/user", userRouter);
 app.use("/posting", postRouter);
 app.use("/home", homeRouter);
-app.use('/profile', profileRouter);
-app.use('/lecture', lectureRouter);
+app.use("/profile", profileRouter);
+app.use("/lecture", lectureRouter);
+app.use("/search", searchRouter);
 
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

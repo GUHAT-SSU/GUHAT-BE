@@ -1,4 +1,10 @@
-const { Lecture, LecturePost, User, LectureReviewFile, LectureReview } = require("../models");
+const {
+    Lecture,
+    LecturePost,
+    User,
+    LectureReviewFile,
+    LectureReview,
+} = require("../models");
 const { Op, Error } = require("sequelize");
 const bodyParser = require("body-parser");
 module.exports = {
@@ -56,6 +62,53 @@ module.exports = {
             return;
         }
     },
+
+    findLectureByName: async (name) => {
+        try {
+            const result = await Lecture.findAll({
+                where: {
+                    name: { [Op.like]: "%" + name + "%" },
+                },
+            }).then((res) => {
+                return res.map((val, idx) => {
+                    return {
+                        ...val.dataValues,
+                        schedule: JSON.parse(val.dataValues.schedule),
+                        professor: JSON.parse(val.dataValues.professor),
+                        target: JSON.parse(val.dataValues.target),
+                    };
+                });
+            });
+            return result.filter((lecture, i) => result.indexOf(lecture) === i); //중복제거
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+    },
+
+    findLectureByProfessor: async (professor) => {
+        try {
+            const result = await Lecture.findAll({
+                where: {
+                    professor: { [Op.like]: "%" + professor + "%" },
+                },
+            }).then((res) => {
+                return res.map((val, idx) => {
+                    return {
+                        ...val.dataValues,
+                        schedule: JSON.parse(val.dataValues.schedule),
+                        professor: JSON.parse(val.dataValues.professor),
+                        target: JSON.parse(val.dataValues.target),
+                    };
+                });
+            });
+            return result.filter((lecture, i) => result.indexOf(lecture) === i);
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+    },
+
     createReview: async (userId, lectureId, post) => {
         try {
             // TODO: 내가 수강한 과목인지, 한 번 리뷰를 쓴 적이 있는지 등 확인하는 로직 추가할 것입니당!
@@ -75,26 +128,29 @@ module.exports = {
                 review_id: newReview.id,
                 lecture_id: lecture.id,
                 price: post.reviewFile.price,
-                file: post.reviewFile.file
+                file: post.reviewFile.file,
             });
-            
+
             return {
                 type: "Success",
                 message: "You successfully created a new review!",
-                reviewId: newReview.id
-            }
-        } catch(err) {
-            if(err.toString() == 'SequelizeForeignKeyConstraintError: Cannot add or update a child row: a foreign key constraint fails (`dev`.`lectureReviews`, CONSTRAINT `lectureReviews_ibfk_2` FOREIGN KEY (`lecture_id`) REFERENCES `schedules` (`lecture_id`) ON DELETE SET NULL ON UPDATE CASCADE)') {
+                reviewId: newReview.id,
+            };
+        } catch (err) {
+            if (
+                err.toString() ==
+                "SequelizeForeignKeyConstraintError: Cannot add or update a child row: a foreign key constraint fails (`dev`.`lectureReviews`, CONSTRAINT `lectureReviews_ibfk_2` FOREIGN KEY (`lecture_id`) REFERENCES `schedules` (`lecture_id`) ON DELETE SET NULL ON UPDATE CASCADE)"
+            ) {
                 return {
                     type: "Error",
-                    message: "당신의 과목이 아닙니다...." 
-                }
+                    message: "당신의 과목이 아닙니다....",
+                };
             }
             console.log(err);
             return {
-                type: 'Error',
-                message: err.toString()
-            }
+                type: "Error",
+                message: err.toString(),
+            };
         }
-    }   
+    },
 };
