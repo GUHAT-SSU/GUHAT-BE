@@ -1,5 +1,6 @@
-const { Lecture } = require("../models");
-const { Op } = require("sequelize");
+const { Lecture, LecturePost, User, LectureReviewFile, LectureReview } = require("../models");
+const { Op, Error } = require("sequelize");
+const bodyParser = require("body-parser");
 module.exports = {
     findLecture: async (data, user) => {
         try {
@@ -55,4 +56,45 @@ module.exports = {
             return;
         }
     },
+    createReview: async (userId, lectureId, post) => {
+        try {
+            // TODO: 내가 수강한 과목인지, 한 번 리뷰를 쓴 적이 있는지 등 확인하는 로직 추가할 것입니당!
+            const lecture = await Lecture.findByPk(lectureId);
+            const writer = await User.findByPk(userId);
+            const newReview = await LectureReview.create({
+                title: post.title,
+                memberNum: post.peopleNum,
+                level: post.level,
+                period: post.period,
+                topic: post.topic,
+                detail: post.detail,
+                writer_id: writer.id,
+                lecture_id: lectureId,
+            });
+            const newReviewFile = await LectureReviewFile.create({
+                review_id: newReview.id,
+                lecture_id: lecture.id,
+                price: post.reviewFile.price,
+                file: post.reviewFile.file
+            });
+            
+            return {
+                type: "Success",
+                message: "You successfully created a new review!",
+                reviewId: newReview.id
+            }
+        } catch(err) {
+            if(err.toString() == 'SequelizeForeignKeyConstraintError: Cannot add or update a child row: a foreign key constraint fails (`dev`.`lectureReviews`, CONSTRAINT `lectureReviews_ibfk_2` FOREIGN KEY (`lecture_id`) REFERENCES `schedules` (`lecture_id`) ON DELETE SET NULL ON UPDATE CASCADE)') {
+                return {
+                    type: "Error",
+                    message: "당신의 과목이 아닙니다...." 
+                }
+            }
+            console.log(err);
+            return {
+                type: 'Error',
+                message: err.toString()
+            }
+        }
+    }   
 };

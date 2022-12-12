@@ -118,4 +118,13 @@ module.exports = {
             throw Error(err);
         }
     },
+    findReviews: async (userId) => {
+        try {
+            // TODO: 리뷰글 보내주는 로직 작성
+        } catch(err) {
+            console.log(err);
+            throw Error(err);
+        }
+
+    }
 };
