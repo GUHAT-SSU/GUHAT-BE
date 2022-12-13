@@ -4,9 +4,7 @@ const { DataTypes } = require("sequelize");
 module.exports = class LectureProjectMember extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
-            {
-
-            },
+            {},
             {
                 // 테이블에 대한 설정 지정
                 sequelize, // static init의 매개변수와 연결되는 옵션, model/index.js에서 연결
@@ -22,12 +20,12 @@ module.exports = class LectureProjectMember extends Sequelize.Model {
     }
     static associate(db) {
         db.LectureProject.hasMany(db.LectureProjectMember, {
-            foreignKey: {name: "lectureProject_id"},
+            foreignKey: { name: "lectureProject_id" },
             sourceKey: "id",
         });
         db.User.hasMany(db.LectureProjectMember, {
-            foreignKey: {name: "member_id", type: DataTypes.STRING},
-            sourceKey: "id"
-        })
+            foreignKey: { name: "member_id", type: DataTypes.STRING },
+            sourceKey: "id",
+        });
     }
 };

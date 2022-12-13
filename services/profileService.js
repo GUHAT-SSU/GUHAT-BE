@@ -7,25 +7,28 @@ const {
     Role,
     RoleApplier,
     Profile,
+    ProfileFile,
 } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 
+const createProfile = async (userId) => {
+    try {
+        return await Profile.create({
+            detail: "",
+            personality: JSON.stringify([0, 0, 0]),
+            mode: "public",
+            introduction: "",
+            skill: JSON.stringify([]),
+        }).then((res) => res.dataValues);
+    } catch (err) {
+        console.log(err);
+        throw new Error(err);
+    }
+};
+
 module.exports = {
     /* ------- 프로필 최초 생성---- ----- */
-    createProfile: async (userId) => {
-        try {
-            return await Profile.create({
-                detail: "",
-                personality: JSON.stringify([0, 0, 0]),
-                mode: "public",
-                introduction: "",
-                skill: JSON.stringify([]),
-            }).then((res) => res.dataValues);
-        } catch (err) {
-            console.log(err);
-            throw new Error(err);
-        }
-    },
+    createProfile,
 
     /* ------- 프로필 조회 ---- ----- */
     findProfileByUserId: async (userId) => {
@@ -46,6 +49,19 @@ module.exports = {
         }
     },
 
+    /* ------- 프로필 공개범위  수정 ---- ----- */
+    updateProfileMode: async (userId, mode) => {
+        try {
+            return await Profile.update(
+                { mode: mode },
+                { where: { user_id: userId } }
+            );
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
     /* ------- 프로필 소개란 수정 ---- ----- */
     updateProfileIntro: async (userId, intro, detail) => {
         try {
@@ -53,6 +69,62 @@ module.exports = {
                 { detail: detail, introduction: intro },
                 { where: { user_id: userId } }
             );
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
+    /* ------- 프로필 상세 수정 ---- ----- */
+    updateProfileDetail: async (userId, skill, personality) => {
+        try {
+            return await Profile.update(
+                {
+                    skill: JSON.stringify(skill),
+                    personality: JSON.stringify(personality),
+                },
+                { where: { user_id: userId } }
+            );
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
+    /* ------- 프로필 포트폴리오 파일 추가---- ----- */
+    addProfileFile: async (userId, files) => {
+        try {
+            const profile = await Profile.findOne({
+                where: { user_id: userId },
+            }).then((res) => {
+                if (res) return res.dataValues;
+                else {
+                    //없으면 새로 생성
+                    return createProfile(userId);
+                }
+            });
+
+            for (let i = 0; i < files.length; i++) {
+                await ProfileFile.create({
+                    file: files[i],
+                    user_id: userId,
+                    profile_id: profile.id,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
+    deleteProfileFile: async (userId, file) => {
+        try {
+            return await ProfileFile.destroy({
+                where: {
+                    file: { [Op.like]: "%" + file + "%" },
+                    user_id: userId,
+                },
+            });
         } catch (err) {
             console.log(err);
             throw new Error(err);

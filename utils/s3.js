@@ -23,7 +23,8 @@ const upload = (file_dir) =>
             contentType: AUTO_CONTENT_TYPE,
             acl: "public-read",
             key: (req, file, cb) => {
-                cb(null, `${file_dir}/${Date.now()}_${file.originalname}`);
+                if (file)
+                    cb(null, `${file_dir}/${Date.now()}_${file.originalname}`);
             },
         }),
     });
