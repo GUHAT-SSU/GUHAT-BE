@@ -25,19 +25,24 @@ module.exports = {
              */
 
             // 유저가 작성한 구인글 모두 가져오기
+            /** 효민 : 유저가 작성하지 않은 것도 보여줘야함 **/
             const lecturePosts = await LecturePost.findAll({
-                where: {
-                    writer_id: userId,
-                },
+                // where: {
+                //     writer_id: userId,
+                // },
                 limit: limit,
                 order: [["createdAt", "DESC"]], // 최신순
             }).then((res) => {
                 return res.map((res) => {
-                    return res.dataValues;
+                    return {
+                        ...res.dataValues,
+                        isOwner: res.dataValues.writer_id === userId,
+                    };
                 });
             });
 
             const data_list = [];
+            console.log(lecturePosts);
 
             for (let l = 0; l < lecturePosts.length; l++) {
                 // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
@@ -97,6 +102,7 @@ module.exports = {
                         schedule: JSON.parse(lecture.schedule),
                     },
                     type: major,
+                    isOwner: lecturePost.isOwner,
                     writer: {
                         studentId: writer.id,
                         name: writer.name,
@@ -118,13 +124,4 @@ module.exports = {
             throw Error(err);
         }
     },
-    findReviews: async (userId) => {
-        try {
-            // TODO: 리뷰글 보내주는 로직 작성
-        } catch(err) {
-            console.log(err);
-            throw Error(err);
-        }
-
-    }
 };
