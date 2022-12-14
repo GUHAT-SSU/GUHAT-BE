@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 
@@ -88,6 +89,29 @@ module.exports = {
         }
     },
     /* ---------- POST : 팀플 지원하기 끝 ----------- */
+
+    /* ---------- POST : 팀플 지원자 수락 ----------- */
+    updateMember: async (roleId, postId, member) => {
+        try {
+            for (let i = 0; i < member.length; i++) {
+                await RoleApplier.update(
+                    { status: "success" },
+                    {
+                        where: {
+                            group_id: roleId,
+                            user_id: member[i],
+                            lecturePost_id: postId,
+                        },
+                    }
+                );
+            }
+            return;
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
     /* ------- GET : 구인글 리스트 모두 조회 -------- */
     findAllPosts: async (sort, page, userId) => {
         try {
@@ -117,9 +141,7 @@ module.exports = {
             for (let l = 0; l < lecturePosts.length; l++) {
                 const lecturePost = lecturePosts[l];
                 // 내가 작성한 구인글 찾기
-                if (userId == lecturePost.writer_id) {
-                    isMine = true;
-                }
+
                 // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
                 const lecture = await Lecture.findOne({
                     where: {
@@ -135,7 +157,7 @@ module.exports = {
 
                 // total : 해당 포스트의 총 지원자 수
                 // current : status == "success"인 사람
-                const total = await RoleApplier.findAndCountAll({
+                /*const total = await RoleApplier.findAndCountAll({
                     where: {
                         lecturePost_id: lecturePost.id,
                     },
@@ -151,7 +173,30 @@ module.exports = {
                     distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
                 }).then((result) => {
                     return result.count;
+                });*/
+
+                const list = await Role.findAll({
+                    where: { lecturePost_id: lecturePost.id },
+                    include: [
+                        {
+                            model: RoleApplier,
+                            required: false,
+                            where: { lecturePost_id: lecturePost.id },
+                        },
+                    ],
+                }).then((res) => res.map((value) => value.dataValues));
+
+                let total = 0;
+                let current = 0;
+                list.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                    });
                 });
+
+                console.log("is mine", isMine);
+
                 // data_list 정리
                 data_list.push({
                     id: lecturePost.id,
@@ -176,7 +221,7 @@ module.exports = {
                     viewCount: lecturePost.viewCnt,
                     total: total,
                     current: current,
-                    isMine: isMine,
+                    isMine: writer.id === userId,
                 });
             }
             // sort 옵션별로 변수 지정
@@ -201,7 +246,12 @@ module.exports = {
                             {
                                 model: RoleApplier,
                                 required: false,
-                                attributes: ["group_id", "status"],
+                                where: {
+                                    group_id: {
+                                        [Op.col]: "Roles.id",
+                                    },
+                                },
+                                attributes: ["group_id", "status", "user_id"],
                             },
                         ],
                         attributes: ["id", "name", "max"],
@@ -211,8 +261,15 @@ module.exports = {
                 if (res) return res.dataValues;
                 else return res;
             });
+
             const lecture = await Lecture.findByPk(post.lecture_id).then(
-                (res) => res.dataValues
+                (res) => {
+                    return {
+                        ...res.dataValues,
+                        schedule: JSON.parse(res.dataValues.schedule),
+                        professor: JSON.parse(res.dataValues.professor),
+                    };
+                }
             );
             return {
                 ...post,
