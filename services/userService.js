@@ -17,6 +17,28 @@ module.exports = {
             .catch((error) => console.log(error));
     },
 
+    getUserInfo: async (id) => {
+        return await User.findOne({
+            where: { id: id },
+            include: [
+                {
+                    model: UserProfileImg,
+                    require: false,
+                    where: { user_id: id },
+                },
+            ],
+        })
+            .then((res) => {
+                return {
+                    id: res.dataValues.id,
+                    nickname: res.dataValues.nickname,
+                    level: res.dataValues.level,
+                    profileImg: res.dataValues.UserProfileImg.file,
+                };
+            })
+            .catch((error) => console.log(error));
+    },
+
     updateUserInfoById: async (id, nickname, profileImg) => {
         try {
             if (profileImg !== null) {

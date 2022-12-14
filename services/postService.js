@@ -189,4 +189,38 @@ module.exports = {
         }
     },
     /* ------- GET : 구인글 리스트 모두 조회 끝 -------- */
+    /* ------- GET : 구인글 조회 -------- */
+    getPost: async (postId) => {
+        try {
+            const post = await LecturePost.findByPk(postId, {
+                include: [
+                    {
+                        model: Role,
+                        required: false,
+                        include: [
+                            {
+                                model: RoleApplier,
+                                required: false,
+                                attributes: ["group_id", "status"],
+                            },
+                        ],
+                        attributes: ["id", "name", "max"],
+                    },
+                ],
+            }).then((res) => {
+                if (res) return res.dataValues;
+                else return res;
+            });
+            const lecture = await Lecture.findByPk(post.lecture_id).then(
+                (res) => res.dataValues
+            );
+            return {
+                ...post,
+                lecture,
+            };
+        } catch (err) {
+            console.log(err);
+            throw Error(err);
+        }
+    },
 };
