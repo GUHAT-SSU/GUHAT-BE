@@ -26,6 +26,7 @@ module.exports = {
 
             // 유저가 작성한 구인글 모두 가져오기
             /** 효민 : 유저가 작성하지 않은 것도 보여줘야함 **/
+            /** 효민 : 데이터 처리 속도가 느림 최적화 필요 **/
             const lecturePosts = await LecturePost.findAll({
                 // where: {
                 //     writer_id: userId,
@@ -59,18 +60,28 @@ module.exports = {
                 major = await myFindMajor(lecture);
 
                 // 유저 찾아서 프로필 이미지 가져오기
-                const writer = await User.findByPk(userId);
-                console.log("writer : " + writer.id);
-
-                const profileImg = await UserProfileImg.findOne({
-                    where: {
-                        user_id: userId,
-                    },
+                const writer = await User.findOne({
+                    where: { id: lecturePost.writer_id },
+                    include: [
+                        {
+                            model: UserProfileImg,
+                            require: false,
+                            where: { user_id: lecturePost.writer_id },
+                        },
+                    ],
                 });
-                console.log("profileImg : " + profileImg.id);
+                console.log("writer!!!! : " + writer);
+
+                // const profileImg = await UserProfileImg.findOne({
+                //     where: {
+                //         user_id: userId,
+                //     },
+                // });
+                // console.log("profileImg : " + profileImg.id);
 
                 // total : 해당 포스트의 총 지원자 수
                 // current : status == "success"인 사람
+                /*
                 const total = await RoleApplier.findAndCountAll({
                     where: {
                         lecturePost_id: lecturePost.id,
@@ -89,7 +100,29 @@ module.exports = {
                     distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
                 }).then((result) => {
                     return result.count;
+                });*/
+                const list = await Role.findAll({
+                    where: { lecturePost_id: lecturePost.id },
+                    include: [
+                        {
+                            model: RoleApplier,
+                            required: false,
+                            where: { lecturePost_id: lecturePost.id },
+                        },
+                    ],
+                }).then((res) => res.map((value) => value.dataValues));
+
+                let total = 0;
+                let current = 0;
+                list.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                    });
                 });
+                // const current = applier.filter(
+                //     (item) => item.status === "success"
+                // ).length;
                 console.log("current : " + current);
                 // data_list 정리
                 data_list.push({
@@ -108,7 +141,7 @@ module.exports = {
                         name: writer.name,
                         nickname: writer.nickname,
                         level: writer.level,
-                        profileImg: profileImg.file,
+                        profileImg: writer.UserProfileImg.file,
                     },
                     endDate: lecturePost.endDate,
                     title: lecturePost.title,

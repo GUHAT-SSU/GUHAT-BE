@@ -107,19 +107,29 @@ module.exports = {
             const writer = await userService.getUserInfo(data.writer_id);
             let isApply = false;
             console.log(data);
-            data.Roles.forEach((role) => {
-                role.RoleAppliers.forEach((applier) => {
+            const Roles = [];
+            for (let i = 0; i < data.Roles.length; i++) {
+                const RoleAppliers = [];
+                for (let j = 0; j < data.Roles[i].RoleAppliers.length; j++) {
+                    const applier = data.Roles[i].RoleAppliers[j];
                     if (applier.dataValues.user_id === userId) {
                         isApply = true;
                     }
-                });
-            });
+                    const user = await userService.getUserInfo(
+                        applier.dataValues.user_id
+                    );
+                    const applierInfo = { ...applier.dataValues, user };
+                    RoleAppliers.push(applierInfo);
+                }
+                Roles.push({ ...data.Roles[i].dataValues, RoleAppliers });
+            }
 
             return res.status(200).json({
                 ok: true,
                 message: "상세 조회 성공!",
                 data: {
                     ...data,
+                    Roles: Roles,
                     writer: writer,
                     isOwner: writer.id === userId,
                     isApply,
@@ -138,6 +148,36 @@ module.exports = {
     getMyApplyPosting: async (req, res) => {},
     /* ------------------- GET '/posting/lecture/apply?userId={userId}' 내가 작성한 구인글 리스트 조회 끝 ------------------------ */
     /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 ----------------- */
-    updateApplyStatus: async (req, res) => {},
+    updateApplyStatus: async (req, res) => {
+        try {
+            const members = req.body.members;
+            console.log("request MEmber", members);
+            if (!members) {
+                return res.status(400).json({
+                    ok: false,
+                    message: "잘못된 요청",
+                });
+            }
+
+            for (let i = 0; i < members.length; i++) {
+                const group = members[i];
+                const applier = group.member.filter((v) => v !== null);
+                console.log(group);
+                await postService.updateMember(
+                    group.roleId,
+                    group.postId,
+                    applier
+                );
+            }
+
+            return res.status(200).json({
+                ok: true,
+                message: "팀원 변경 성공!",
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
     /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 끝 ----------------- */
 };
