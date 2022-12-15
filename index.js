@@ -3,6 +3,7 @@ const cors = require("cors");
 const { loadMajor } = require("./db/loadLecture");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const multer = require("multer");
 const passport = require("passport");
 const { sequelize } = require("./models");
 

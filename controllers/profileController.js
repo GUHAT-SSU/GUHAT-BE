@@ -46,7 +46,9 @@ module.exports = {
             const teamHistory = await lectureProjectService.getMyProjects(
                 req.userId
             );
-            const file = profile.ProfileFiles.map((file) => file.dataValues);
+            let file = [];
+            if (profile.ProfileFiles)
+                file = profile.ProfileFiles.map((file) => file.dataValues);
 
             //TODO 파일 추가
             return res.status(200).json({
@@ -64,6 +66,7 @@ module.exports = {
                 },
             });
         } catch (err) {
+            console.log(err);
             return res.status(500).json(err);
         }
     },
