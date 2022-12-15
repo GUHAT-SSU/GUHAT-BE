@@ -1,4 +1,5 @@
 const { ConsoleMessage } = require("puppeteer");
+const { Op } = require("sequelize");
 const {
     LecturePost,
     Lecture,
@@ -107,7 +108,11 @@ module.exports = {
                         {
                             model: RoleApplier,
                             required: false,
-                            where: { lecturePost_id: lecturePost.id },
+                            where: {
+                                group_id: {
+                                    [Op.col]: "Role.id",
+                                },
+                            },
                         },
                     ],
                 }).then((res) => res.map((value) => value.dataValues));

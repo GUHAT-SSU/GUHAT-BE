@@ -33,16 +33,23 @@ module.exports = {
     /* ------- 프로필 조회 ---- ----- */
     findProfileByUserId: async (userId) => {
         try {
-            return await Profile.findOne({ where: { user_id: userId } }).then(
-                (res) => {
-                    console.log(res.dataValues.personality);
-                    if (res)
-                        return {
-                            ...res.dataValues,
-                        };
-                    else res;
-                }
-            );
+            return await Profile.findOne({
+                where: { user_id: userId },
+                include: [
+                    {
+                        model: ProfileFile,
+                        required: false,
+                        where: { user_id: userId },
+                        attributes: ["id", "file"],
+                    },
+                ],
+            }).then((res) => {
+                if (res)
+                    return {
+                        ...res.dataValues,
+                    };
+                else res;
+            });
         } catch (err) {
             console.log(err);
             throw new Error(err);
@@ -118,13 +125,18 @@ module.exports = {
     },
 
     deleteProfileFile: async (userId, file) => {
+        console.log("delte", file);
+        console.log("user", userId);
         try {
-            return await ProfileFile.destroy({
+            const deleteFile = await ProfileFile.destroy({
                 where: {
-                    file: { [Op.like]: "%" + file + "%" },
-                    user_id: userId,
+                    [Op.and]: {
+                        file: { [Op.like]: "%" + file + "%" },
+                        user_id: userId,
+                    },
                 },
             });
+            console.log(deleteFile);
         } catch (err) {
             console.log(err);
             throw new Error(err);
@@ -164,7 +176,10 @@ module.exports = {
                         id: lecturePost.lecture_id,
                     },
                 }).then((result) => {
-                    return result.dataValues;
+                    return {
+                        ...result.dataValues,
+                        professor: JSON.parse(result.dataValues.professor),
+                    };
                 });
 
                 major = await myFindMajor(lecture);
@@ -172,28 +187,53 @@ module.exports = {
                 const writer = await User.findByPk(writer_id);
                 // total : 해당 포스트의 총 지원자 수
                 // current : status == "success"인 사람
-                const total = await RoleApplier.findAndCountAll({
-                    where: {
-                        lecturePost_id: lecturePost.id,
-                    },
-                    distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
-                }).then((result) => {
-                    return result.count;
-                });
-                console.log("total : " + total);
+                // const total = await RoleApplier.findAndCountAll({
+                //     where: {
+                //         lecturePost_id: lecturePost.id,
+                //     },
+                //     distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                // }).then((result) => {
+                //     return result.count;
+                // });
+                // console.log("total : " + total);
 
-                const current = await RoleApplier.findAndCountAll({
-                    where: {
-                        lecturePost_id: lecturePost.id,
-                        status: "success",
-                    },
-                    distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
-                }).then((result) => {
-                    return result.count;
+                // const current = await RoleApplier.findAndCountAll({
+                //     where: {
+                //         lecturePost_id: lecturePost.id,
+                //         status: "success",
+                //     },
+                //     distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
+                // }).then((result) => {
+                //     return result.count;
+                // });
+
+                const list = await Role.findAll({
+                    where: { lecturePost_id: lecturePost.id },
+                    include: [
+                        {
+                            model: RoleApplier,
+                            required: false,
+                            where: {
+                                group_id: {
+                                    [Op.col]: "Role.id",
+                                },
+                            },
+                        },
+                    ],
+                }).then((res) => res.map((value) => value.dataValues));
+
+                let total = 0;
+                let current = 0;
+                list.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                    });
                 });
                 // data_list 정리
                 data_list.push({
                     id: lecturePost.id,
+                    createdAt: lecturePost.createdAt,
                     lecture: {
                         lectureId: lecture.id,
                         name: lecture.name,
@@ -201,6 +241,7 @@ module.exports = {
                         semester: lecture.semester,
                         schedule: lecture.schedule,
                     },
+
                     type: major,
                     writer: {
                         studentId: writer.id,

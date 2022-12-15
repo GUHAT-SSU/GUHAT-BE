@@ -46,6 +46,7 @@ module.exports = {
             const teamHistory = await lectureProjectService.getMyProjects(
                 req.userId
             );
+            const file = profile.ProfileFiles.map((file) => file.dataValues);
 
             //TODO 파일 추가
             return res.status(200).json({
@@ -56,9 +57,10 @@ module.exports = {
                     detail: profile.detail,
                     introduction: profile.introduction,
                     mode: profile.mode,
-                    skill: profile.skill,
-                    personality: profile.personality,
+                    skill: JSON.parse(profile.skill),
+                    personality: JSON.parse(profile.personality),
                     hisotry: teamHistory,
+                    files: file,
                 },
             });
         } catch (err) {
@@ -139,13 +141,14 @@ module.exports = {
     /* s3 profile 폴더에 접근해 삭제 */
     deleteProfileFile: async (req, res) => {
         //하나의 사진만 삭제합니다
+        console.log(req.body);
         try {
             const file = req.body.file;
             if (!file)
                 return res.status(400).json({
                     message: "잘못된 요청 값",
                 });
-            await profileService.deleteProfileFile(file);
+            await profileService.deleteProfileFile(req.userId, file);
             delete_file(file);
             return res.status(200).json({
                 message: "삭제 성공",

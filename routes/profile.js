@@ -16,6 +16,6 @@ router.post(
     upload("profile").array("profile"),
     profileController.addProfileFile
 );
-router.post("/file/delete", profileController.deleteProfileFile);
+router.post("/file/delete", authChecker, profileController.deleteProfileFile);
 
 module.exports = router;
