@@ -86,6 +86,23 @@ module.exports = {
         }
     },
 
+    findLectureById: async (lectureId) => {
+        try {
+            return await Lecture.findByPk(lectureId).then((res) => {
+                if (res)
+                    return {
+                        ...res.dataValues,
+                        professor: JSON.parse(res.dataValues.professor),
+                        schedule: JSON.parse(res.dataValues.schedule),
+                    };
+                else return res;
+            });
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
     findLectureByProfessor: async (professor) => {
         try {
             const result = await Lecture.findAll({
