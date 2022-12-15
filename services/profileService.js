@@ -10,6 +10,7 @@ const {
     ProfileFile,
 } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
+const userService = require("./userService");
 
 const createProfile = async (userId) => {
     try {
@@ -19,6 +20,7 @@ const createProfile = async (userId) => {
             mode: "public",
             introduction: "",
             skill: JSON.stringify([]),
+            user_id: userId,
         }).then((res) => res.dataValues);
     } catch (err) {
         console.log(err);
@@ -144,7 +146,7 @@ module.exports = {
     },
 
     /* ------- GET : 작성한 구인글 리스트 조회 --------- */
-    findMyPosts: async (writer_id, page) => {
+    findMyPosts: async (userId, page) => {
         try {
             let major;
             // pagination
@@ -155,9 +157,25 @@ module.exports = {
             }
             // 내가 작성한 구인글 모두 가져오기
             const lecturePosts = await LecturePost.findAll({
-                where: {
-                    writer_id: writer_id,
-                },
+                include: [
+                    {
+                        model: Role,
+                        required: false,
+                        include: [
+                            {
+                                model: RoleApplier,
+                                required: false,
+                                where: {
+                                    group_id: {
+                                        [Op.col]: "Roles.id",
+                                    },
+                                },
+                                attributes: ["group_id", "status", "user_id"],
+                            },
+                        ],
+                        attributes: ["id", "name", "max"],
+                    },
+                ],
                 // pagination
                 offset: offset,
                 limit: limit,
@@ -167,6 +185,7 @@ module.exports = {
                     return res.dataValues;
                 });
             });
+            console.log("lecturepost", lecturePosts);
             const data_list = [];
 
             for (let l = 0; l < lecturePosts.length; l++) {
@@ -184,7 +203,9 @@ module.exports = {
 
                 major = await myFindMajor(lecture);
 
-                const writer = await User.findByPk(writer_id);
+                const writer = await userService.getUserInfo(
+                    lecturePost.writer_id
+                );
                 // total : 해당 포스트의 총 지원자 수
                 // current : status == "success"인 사람
                 // const total = await RoleApplier.findAndCountAll({
@@ -207,56 +228,52 @@ module.exports = {
                 //     return result.count;
                 // });
 
-                const list = await Role.findAll({
-                    where: { lecturePost_id: lecturePost.id },
-                    include: [
-                        {
-                            model: RoleApplier,
-                            required: false,
-                            where: {
-                                group_id: {
-                                    [Op.col]: "Role.id",
-                                },
-                            },
-                        },
-                    ],
-                }).then((res) => res.map((value) => value.dataValues));
-
                 let total = 0;
                 let current = 0;
-                list.forEach((role) => {
+                let isApply = false;
+                let status;
+                const isOwner = userId === lecturePost.writer_id;
+                lecturePost.Roles.forEach((role) => {
                     total += role.max;
                     role.RoleAppliers.forEach((mem) => {
                         if (mem.status === "success") current++;
+                        if (mem.user_id === userId) {
+                            isApply = true;
+                            status = mem.status;
+                        }
                     });
                 });
                 // data_list 정리
-                data_list.push({
-                    id: lecturePost.id,
-                    createdAt: lecturePost.createdAt,
-                    lecture: {
-                        lectureId: lecture.id,
-                        name: lecture.name,
-                        professors: lecture.professor,
-                        semester: lecture.semester,
-                        schedule: lecture.schedule,
-                    },
+                if (isOwner || isApply)
+                    data_list.push({
+                        id: lecturePost.id,
+                        createdAt: lecturePost.createdAt,
+                        lecture: {
+                            lectureId: lecture.id,
+                            name: lecture.name,
+                            professors: lecture.professor,
+                            semester: lecture.semester,
+                            schedule: lecture.schedule,
+                        },
 
-                    type: major,
-                    writer: {
-                        studentId: writer.id,
-                        name: writer.name,
-                        nickname: writer.nickname,
-                        level: writer.level,
-                        // profileImg: profileImg.file
-                    },
-                    endDate: lecturePost.endDate,
-                    title: lecturePost.title,
-                    detail: lecturePost.detail,
-                    viewCount: lecturePost.viewCnt,
-                    total: total,
-                    current: current,
-                });
+                        type: major,
+                        writer: {
+                            studentId: writer.id,
+                            name: writer.name,
+                            nickname: writer.nickname,
+                            level: writer.level,
+                            profileImg: writer.profileImg,
+                        },
+                        isApply: isApply,
+                        status: status ? status : "owner",
+                        isOwner: isOwner,
+                        endDate: lecturePost.endDate,
+                        title: lecturePost.title,
+                        detail: lecturePost.detail,
+                        viewCount: lecturePost.viewCnt,
+                        total: total,
+                        current: current,
+                    });
             }
             return data_list;
         } catch (err) {
