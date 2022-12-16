@@ -7,6 +7,7 @@ const {
 } = require("../models");
 const { Op, Error } = require("sequelize");
 const bodyParser = require("body-parser");
+const scheduleService = require("./scheduleService");
 module.exports = {
     findLecture: async (data, user) => {
         try {
@@ -126,6 +127,27 @@ module.exports = {
         }
     },
 
+    reviewPostValidation: async (userId, lectureId) => {
+        try {
+            const schedule = await scheduleService.findScheduleByUserId(userId);
+            if (schedule.length == 0)
+                return { ok: false, message: "시간표 업로드가 필요합니다" };
+            let validation = schedule
+                .map((s) => s.dataValues)
+                .findIndex((s) => {
+                    return s.lecture_id == lectureId;
+                });
+
+            if (validation !== -1) {
+                return { ok: true, message: "리뷰 작성 가능합니다" };
+            }
+            return { ok: false, message: "수강 과목이 아닙니다" };
+        } catch (error) {
+            console.log(error);
+            throw new Error(error);
+        }
+    },
+
     createReview: async (userId, lectureId, post) => {
         try {
             const lecture = await Lecture.findByPk(lectureId);
@@ -140,12 +162,12 @@ module.exports = {
                 writer_id: writer.id,
                 lecture_id: lectureId,
             });
-            const newReviewFile = await LectureReviewFile.create({
-                review_id: newReview.id,
-                lecture_id: lecture.id,
-                price: post.reviewFile.price,
-                file: post.reviewFile.file,
-            });
+            // const newReviewFile = await LectureReviewFile.create({
+            //     review_id: newReview.id,
+            //     lecture_id: lecture.id,
+            //     price: 0,
+            //     file: post.reviewFile.file,
+            // });
 
             return {
                 type: "Success",
@@ -167,6 +189,24 @@ module.exports = {
                 type: "Error",
                 message: err.toString(),
             };
+        }
+    },
+
+    uploadReviewFile: async (reviewPostId, files) => {
+        try {
+            const post = await LectureReview.findByPk(reviewPostId);
+            if (!post) return;
+            for (let i = 0; i < files.length; i++) {
+                const newReviewFile = await LectureReviewFile.create({
+                    review_id: post.id,
+                    lecture_id: post.dataValues.lecture_id,
+                    price: 0,
+                    file: files[i],
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            throw new Error(error);
         }
     },
 };

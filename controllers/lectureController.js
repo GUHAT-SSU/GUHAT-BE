@@ -1,4 +1,3 @@
-const { createBrowserFetcher } = require("puppeteer");
 const lectureService = require("../services/lectureService");
 const postService = require("../services/postService");
 
@@ -12,6 +11,7 @@ module.exports = {
                     message: "cannot get lectureId.........",
                 });
             }
+
             const post = req.body;
             console.log(post);
             if (!post) {
@@ -26,6 +26,52 @@ module.exports = {
 
             return res.status(200).json({ type, message, reviewId });
         } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+
+    addReviewFile: async (req, res) => {
+        try {
+            const reviewId = req.query.reviewId;
+            if (req.files) {
+                await lectureService.uploadReviewFile(
+                    reviewId,
+                    req.files.map((file) => file.location)
+                );
+                return res.status(200).json({
+                    message: "upload 성공",
+                    data: req.files,
+                });
+            } else {
+                return res.status(400).json({
+                    message: "upload 실패",
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+
+    postReviewValidation: async (req, res) => {
+        try {
+            const lectureId = req.params.lectureId;
+            const canWrite = await lectureService.reviewPostValidation(
+                req.userId,
+                lectureId
+            );
+            if (canWrite.ok) {
+                return res.status(200).json({
+                    ...canWrite,
+                });
+            } else {
+                return res.status(400).json({
+                    ...canWrite,
+                });
+            }
+        } catch (error) {
+            console.log(err);
             return res.status(500).json(err);
         }
     },

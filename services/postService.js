@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
+const lectureService = require("./lectureService");
 const userService = require("./userService");
 
 module.exports = {
@@ -347,14 +348,7 @@ module.exports = {
                     data_list.push({
                         id: lecturePost.id,
                         createdAt: lecturePost.createdAt,
-                        lecture: {
-                            lectureId: lecture.id,
-                            name: lecture.name,
-                            professors: lecture.professor,
-                            semester: lecture.semester,
-                            schedule: lecture.schedule,
-                        },
-
+                        lecture: lecture,
                         type: major,
                         writer: {
                             studentId: writer.id,
