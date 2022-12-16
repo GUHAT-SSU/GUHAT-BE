@@ -240,12 +240,13 @@ module.exports = {
                     };
                 });
             });
+            
             const data_list = [];
             console.log(reviews);
             // lecture 정보, wirter, title, detail. likeCOujt
             for(let r = 0; r < reviews.length; r++) {
+                
                 const review = reviews[r];
-
                 const lecture = await Lecture.findOne({
                     where: {
                         id: review.lecture_id,
@@ -280,7 +281,6 @@ module.exports = {
                         semester: lecture.semester,
                         schedule: JSON.parse(lecture.schedule),
                     },
-                    isOwner: reviews.isOwner,
                     writer: {
                         studentId: writer.id,
                         name: writer.name,
@@ -291,7 +291,8 @@ module.exports = {
                     title: review.title,
                     detail: review.detail,
                     viewCount: review.viewCnt,
-                    likeCount: likeCount
+                    likeCount: likeCount,
+                    isOwner: review.isOwner
                 })
             }
             return data_list;
