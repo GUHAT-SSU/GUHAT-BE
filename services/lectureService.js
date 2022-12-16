@@ -128,7 +128,6 @@ module.exports = {
 
     createReview: async (userId, lectureId, post) => {
         try {
-            // TODO: 내가 수강한 과목인지, 한 번 리뷰를 쓴 적이 있는지 등 확인하는 로직 추가할 것입니당!
             const lecture = await Lecture.findByPk(lectureId);
             const writer = await User.findByPk(userId);
             const newReview = await LectureReview.create({

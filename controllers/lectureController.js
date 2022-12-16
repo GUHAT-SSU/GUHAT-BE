@@ -6,7 +6,7 @@ module.exports = {
     createReview: async (req, res) => {
         try {
             const userId = req.userId;
-            const lectureId = req.query.lectureId;
+            const lectureId = req.params.lectureId;
             if (!lectureId) {
                 res.status(404).send({
                     message: "cannot get lectureId.........",

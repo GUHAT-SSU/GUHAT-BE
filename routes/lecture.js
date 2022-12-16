@@ -5,7 +5,7 @@ const lectureController = require("../controllers/lectureController");
 const router = express.Router();
 
 // 과목 페이지에 있는 것들 : 과목별 리뷰, 과목별 모집글
-router.post("/review/new", authChecker, lectureController.createReview);
+router.post("/:lectureId/review/new", authChecker, lectureController.createReview);
 router.get(
     "/:lectureId/recruits",
     authChecker,
