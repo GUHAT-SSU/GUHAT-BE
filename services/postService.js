@@ -1,5 +1,7 @@
+const { Op } = require("sequelize");
 const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
+const userService = require("./userService");
 
 module.exports = {
     /* ------ POST : 게시물 생성 ------ */
@@ -88,6 +90,29 @@ module.exports = {
         }
     },
     /* ---------- POST : 팀플 지원하기 끝 ----------- */
+
+    /* ---------- POST : 팀플 지원자 수락 ----------- */
+    updateMember: async (roleId, postId, member) => {
+        try {
+            for (let i = 0; i < member.length; i++) {
+                await RoleApplier.update(
+                    { status: "success" },
+                    {
+                        where: {
+                            group_id: roleId,
+                            user_id: member[i],
+                            lecturePost_id: postId,
+                        },
+                    }
+                );
+            }
+            return;
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
+
     /* ------- GET : 구인글 리스트 모두 조회 -------- */
     findAllPosts: async (sort, page, userId) => {
         try {
@@ -117,9 +142,7 @@ module.exports = {
             for (let l = 0; l < lecturePosts.length; l++) {
                 const lecturePost = lecturePosts[l];
                 // 내가 작성한 구인글 찾기
-                if (userId == lecturePost.writer_id) {
-                    isMine = true;
-                }
+
                 // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
                 const lecture = await Lecture.findOne({
                     where: {
@@ -133,25 +156,32 @@ module.exports = {
 
                 const writer = await User.findByPk(lecturePost.writer_id);
 
-                // total : 해당 포스트의 총 지원자 수
-                // current : status == "success"인 사람
-                const total = await RoleApplier.findAndCountAll({
-                    where: {
-                        lecturePost_id: lecturePost.id,
-                    },
-                    distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
-                }).then((result) => {
-                    return result.count;
+                const list = await Role.findAll({
+                    where: { lecturePost_id: lecturePost.id },
+                    include: [
+                        {
+                            model: RoleApplier,
+                            required: false,
+                            where: {
+                                group_id: {
+                                    [Op.col]: "Role.id",
+                                },
+                            },
+                        },
+                    ],
+                }).then((res) => res.map((value) => value.dataValues));
+
+                let total = 0;
+                let current = 0;
+                list.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                    });
                 });
-                const current = await RoleApplier.findAndCountAll({
-                    where: {
-                        lecturePost_id: lecturePost.id,
-                        status: "success",
-                    },
-                    distinct: true, // 연결된 테이블로 인해 count가 바뀌는 현상을 막을 수 있다
-                }).then((result) => {
-                    return result.count;
-                });
+
+                console.log("is mine", isMine);
+
                 // data_list 정리
                 data_list.push({
                     id: lecturePost.id,
@@ -176,7 +206,7 @@ module.exports = {
                     viewCount: lecturePost.viewCnt,
                     total: total,
                     current: current,
-                    isMine: isMine,
+                    isMine: writer.id === userId,
                 });
             }
             // sort 옵션별로 변수 지정
@@ -189,4 +219,168 @@ module.exports = {
         }
     },
     /* ------- GET : 구인글 리스트 모두 조회 끝 -------- */
+    /* ------- GET : 구인글 조회 -------- */
+    getPost: async (postId) => {
+        try {
+            const post = await LecturePost.findByPk(postId, {
+                include: [
+                    {
+                        model: Role,
+                        required: false,
+                        include: [
+                            {
+                                model: RoleApplier,
+                                required: false,
+                                where: {
+                                    group_id: {
+                                        [Op.col]: "Roles.id",
+                                    },
+                                },
+                                attributes: ["group_id", "status", "user_id"],
+                            },
+                        ],
+                        attributes: ["id", "name", "max"],
+                    },
+                ],
+            }).then((res) => {
+                if (res) return res.dataValues;
+                else return res;
+            });
+
+            const lecture = await Lecture.findByPk(post.lecture_id).then(
+                (res) => {
+                    return {
+                        ...res.dataValues,
+                        schedule: JSON.parse(res.dataValues.schedule),
+                        professor: JSON.parse(res.dataValues.professor),
+                    };
+                }
+            );
+            return {
+                ...post,
+                lecture,
+            };
+        } catch (err) {
+            console.log(err);
+            throw Error(err);
+        }
+    },
+
+    /* ------- GET : 수업 해당 구인글 조회 -------- */
+    findPostByLectureId: async (sort, page, lectureId, userId) => {
+        console.log("lectureID", lectureId);
+        try {
+            let limit = 10;
+            let offset = 0;
+            if (page > 1) {
+                offset = limit * (page - 1);
+            }
+
+            const lecturePosts = await LecturePost.findAll({
+                where: { lecture_id: lectureId },
+                include: [
+                    {
+                        model: Role,
+                        required: false,
+                        include: [
+                            {
+                                model: RoleApplier,
+                                required: false,
+                                where: {
+                                    group_id: {
+                                        [Op.col]: "Roles.id",
+                                    },
+                                },
+                                attributes: ["group_id", "status", "user_id"],
+                            },
+                        ],
+                        attributes: ["id", "name", "max"],
+                    },
+                ],
+                offset: offset,
+                limit: limit,
+                order: [["createdAt", "DESC"]], // 최신순
+            }).then((res) => {
+                console.log(res);
+                return res.map((r) => r.dataValues);
+            });
+            console.log("result", lecturePosts);
+            const data_list = [];
+
+            for (let l = 0; l < lecturePosts.length; l++) {
+                const lecturePost = lecturePosts[l];
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: lecturePost.lecture_id,
+                    },
+                }).then((result) => {
+                    return {
+                        ...result.dataValues,
+                        professor: JSON.parse(result.dataValues.professor),
+                        schedule: JSON.parse(result.dataValues.schedule),
+                    };
+                });
+
+                major = await myFindMajor(lecture);
+
+                const writer = await userService.getUserInfo(
+                    lecturePost.writer_id
+                );
+
+                let total = 0;
+                let current = 0;
+                let isApply = false;
+                let status;
+                const isOwner = userId === lecturePost.writer_id;
+                lecturePost.Roles.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                        if (mem.user_id === userId) {
+                            isApply = true;
+                            status = mem.status;
+                        }
+                    });
+                });
+                // data_list 정리
+                if (isOwner || isApply)
+                    data_list.push({
+                        id: lecturePost.id,
+                        createdAt: lecturePost.createdAt,
+                        lecture: {
+                            lectureId: lecture.id,
+                            name: lecture.name,
+                            professors: lecture.professor,
+                            semester: lecture.semester,
+                            schedule: lecture.schedule,
+                        },
+
+                        type: major,
+                        writer: {
+                            studentId: writer.id,
+                            name: writer.name,
+                            nickname: writer.nickname,
+                            level: writer.level,
+                            profileImg: writer.profileImg,
+                        },
+                        isApply: isApply,
+                        status: status ? status : "owner",
+                        isOwner: isOwner,
+                        endDate: lecturePost.endDate,
+                        title: lecturePost.title,
+                        detail: lecturePost.detail,
+                        viewCount: lecturePost.viewCnt,
+                        total: total,
+                        current: current,
+                    });
+            }
+
+            const sorted_list = mySort(data_list, sort);
+
+            return sorted_list;
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
 };

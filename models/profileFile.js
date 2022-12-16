@@ -8,9 +8,9 @@ module.exports = class ProfileFile extends Sequelize.Model {
                 file: {
                     type: Sequelize.STRING(1000),
                     allowNull: true,
-                    comment: "파일"
+                    defaultValue: null,
+                    comment: "파일",
                 },
-
             },
             {
                 // 테이블에 대한 설정 지정
@@ -27,12 +27,12 @@ module.exports = class ProfileFile extends Sequelize.Model {
     }
     static associate(db) {
         db.Profile.hasMany(db.ProfileFile, {
-            foreignKey: {name: "user_id", type: DataTypes.STRING},
-            sourceKey: "user_id"
-        })
+            foreignKey: { name: "user_id", type: DataTypes.STRING },
+            sourceKey: "user_id",
+        });
         db.Profile.hasMany(db.ProfileFile, {
-            foreignKey: {name: "profile_id"},
-            sourceKey: "id"
-        })
+            foreignKey: { name: "profile_id" },
+            sourceKey: "id",
+        });
     }
 };

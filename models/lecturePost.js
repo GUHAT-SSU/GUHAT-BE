@@ -8,45 +8,45 @@ module.exports = class LecturePost extends Sequelize.Model {
                 title: {
                     type: Sequelize.STRING(50),
                     allowNull: false,
-                    comment: "제목"
-                }, 
+                    comment: "제목",
+                },
                 endDate: {
                     type: Sequelize.DATEONLY(20), // YYYY-MM-DD
                     allowNull: false,
-                    comment: "마감기한"
+                    comment: "마감기한",
                 },
                 detail: {
                     type: Sequelize.STRING(500),
                     allowNull: false,
-                    comment: "상세설명"
+                    comment: "상세설명",
                 },
                 priority: {
                     type: Sequelize.STRING(200),
                     allowNull: true,
-                    comment: "우대사항"
+                    comment: "우대사항",
                 },
                 chatLink: {
                     type: Sequelize.STRING(1000),
                     allowNull: true,
-                    comment: "채팅링크"
+                    comment: "채팅링크",
                 },
                 viewCnt: {
                     type: Sequelize.INTEGER(100),
                     allowNull: true,
                     defaultValue: 0,
-                    comment: "조회수"
-                }, 
+                    comment: "조회수",
+                },
                 status: {
                     type: Sequelize.STRING(10),
                     allowNull: false,
                     defaultValue: "open", // open / close
-                    comment: "마감여부현황"
+                    comment: "마감여부현황",
                 },
                 period: {
                     type: Sequelize.STRING(30),
                     allowNull: false,
-                    comment: "예상기간"
-                }
+                    comment: "예상기간",
+                },
             },
             {
                 // 테이블에 대한 설정 지정
@@ -63,13 +63,13 @@ module.exports = class LecturePost extends Sequelize.Model {
     }
     static associate(db) {
         db.User.hasMany(db.LecturePost, {
-            foreignKey: {name: "writer_id", type: DataTypes.STRING},
+            foreignKey: { name: "writer_id", type: DataTypes.STRING },
             sourceKey: "id",
             paranoid: true,
         });
-        db.Lecture.hasMany(db.LecturePost,{
-            foreignKey: {name: "lecture_id"},
-            sourceKey: "id"
+        db.Lecture.hasMany(db.LecturePost, {
+            foreignKey: { name: "lecture_id" },
+            sourceKey: "id",
         });
     }
 };

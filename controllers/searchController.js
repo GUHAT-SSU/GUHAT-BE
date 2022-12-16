@@ -6,7 +6,8 @@ module.exports = {
     getSeachResult: async (req, res) => {
         try {
             const option = req.query.option;
-            const keyword = req.query.keyword;
+            const keyword = decodeURIComponent(req.query.keyword);
+            console.log("keyword", keyword);
 
             if (
                 !(
@@ -28,10 +29,11 @@ module.exports = {
             } else {
                 result = await profileService.findProfileBySkill(keyword);
             }
+            console.log(result);
 
             return res.status(200).json({
                 ok: true,
-                message: option + "/ 검색 결과 가져오기 성공",
+                message: option + "/" + keyword + "/ 검색 결과 가져오기 성공",
                 data: result,
             });
         } catch (err) {
