@@ -28,7 +28,7 @@ const config = require(__dirname + "/../config/config.json")[env];
 
 const db = {};
 
-let sequeli
+let sequelize;
 if (config) {
     sequelize = new Sequelize(
         config.database,

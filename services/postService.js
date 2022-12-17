@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
+const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const userService = require("./userService");
 
@@ -34,10 +34,23 @@ module.exports = {
             }
             console.log("newPost exists? : ");
             console.log(newPost.id);
+            // 일단 project도 함께 생성해준다...
+            const newProject = await LectureProject.create({
+                lecturePost_id: newPost.id,
+                lecture_id: body.lecture_id,
+                user_id: userId
+            });
+
+            const newProjectMember = await LectureProjectMember.create({
+                lectureProject_id: newProject.id,
+                member_id: userId
+            });
             return {
                 type: "Success",
                 message: "You successfully created a new post!",
                 postId: newPost.dataValues.id,
+                newProject: newProject!==null,
+                newProjectMember: newProjectMember!==null 
             };
         } catch (err) {
             console.log(err);
@@ -74,6 +87,8 @@ module.exports = {
                 lecturePost_id: postId,
             });
             console.log("newApplier exists? : ", newApplier.id);
+            
+            // 지원자 lectureProjectMember 컬럼에 추가하기
             return {
                 type: "Success",
                 statusCode: 200,
