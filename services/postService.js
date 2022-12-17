@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
+const lectureService = require("./lectureService");
 const userService = require("./userService");
 
 module.exports = {
@@ -105,6 +106,38 @@ module.exports = {
         }
     },
     /* ---------- POST : 팀플 지원하기 끝 ----------- */
+
+    getMember: async (postId) => {
+        /* 지원 성공한 멤버 반환*/
+        try {
+            const memberList = [];
+            const data = await Role.findAll({
+                where: {
+                    lecturePost_id: postId,
+                },
+                include: {
+                    model: RoleApplier,
+
+                    where: {
+                        status: "success",
+                        group_id: {
+                            [Op.col]: "Role.id",
+                        },
+                    },
+                },
+            });
+
+            data?.forEach((applier) => {
+                applier.RoleAppliers.forEach((mem) => {
+                    memberList.push(mem.dataValues.user_id);
+                });
+            });
+            return memberList;
+        } catch (err) {
+            console.log(err);
+            throw new Error(err);
+        }
+    },
 
     /* ---------- POST : 팀플 지원자 수락 ----------- */
     updateMember: async (roleId, postId, member) => {
@@ -362,14 +395,7 @@ module.exports = {
                     data_list.push({
                         id: lecturePost.id,
                         createdAt: lecturePost.createdAt,
-                        lecture: {
-                            lectureId: lecture.id,
-                            name: lecture.name,
-                            professors: lecture.professor,
-                            semester: lecture.semester,
-                            schedule: lecture.schedule,
-                        },
-
+                        lecture: lecture,
                         type: major,
                         writer: {
                             studentId: writer.id,

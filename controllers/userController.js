@@ -13,7 +13,12 @@ module.exports = {
         try {
             const id = req.userId;
             const user = await userService.findUserById(id);
-            const result = { ...user, profileImg: user.UserProfileImg.file };
+            const result = {
+                ...user,
+                profileImg: user.UserProfileImg
+                    ? user.UserProfileImg.file
+                    : null,
+            };
             delete result.UserProfileImg;
             delete result.token;
             delete result.password;
@@ -23,7 +28,8 @@ module.exports = {
                 data: { ...result },
             });
         } catch (error) {
-            return res.status(400).send({
+            console.log(error);
+            return res.status(500).send({
                 ok: false,
                 message: error.message,
             });

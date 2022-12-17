@@ -1,3 +1,4 @@
+const { ProfileFile } = require("../models");
 const lectureProjectService = require("../services/lectureProjectService");
 const profileService = require("../services/profileService");
 const { delete_file } = require("../utils/s3");
@@ -37,19 +38,23 @@ module.exports = {
     /* --- GET /profile 프로필 조회 ---*/
     getProfile: async (req, res) => {
         try {
-            let profile = await profileService.findProfileByUserId(req.userId);
-
-            if (!profile) {
-                profile = await profileService.createProfile(req.userId); //최초 생성
-            }
-
-            const teamHistory = await lectureProjectService.getMyProjects(
+            const profile = await profileService.findProfileByUserId(
                 req.userId
             );
-            let file = [];
-            if (profile.ProfileFiles)
-                file = profile.ProfileFiles.map((file) => file.dataValues);
 
+            // const teamHistory = await lectureProjectService.getMyProjects(
+            //     req.userId
+            // );
+            let file = [];
+            if (profile) {
+                file = await ProfileFile.findAll({
+                    where: { user_id: req.userId },
+
+                    raw: true,
+                });
+            }
+
+            console.log("profile", profile);
             //TODO 파일 추가
             return res.status(200).json({
                 ok: true,
@@ -59,10 +64,12 @@ module.exports = {
                     detail: profile.detail,
                     introduction: profile.introduction,
                     mode: profile.mode,
-                    skill: JSON.parse(profile.skill),
-                    personality: JSON.parse(profile.personality),
-                    hisotry: teamHistory,
-                    files: file,
+                    skill: profile.skill ? JSON.parse(profile.skill) : [],
+                    personality: profile.personality
+                        ? JSON.parse(profile.personality)
+                        : [0, 0, 0],
+                    hisotry: [],
+                    files: file ? file : [],
                 },
             });
         } catch (err) {
@@ -110,7 +117,7 @@ module.exports = {
                 req.userId
             );
             if (!profile) {
-                await profileService.createProfile(req.userId); //최초 생성
+                return res.status(400).json({ message: "프로필 조회 실패" });
             }
             await profileService.updateProfileIntro(req.userId, intro, detail);
 

@@ -35,23 +35,14 @@ module.exports = {
     /* ------- 프로필 조회 ---- ----- */
     findProfileByUserId: async (userId) => {
         try {
-            return await Profile.findOne({
+            const profile = await Profile.findOne({
                 where: { user_id: userId },
-                include: [
-                    {
-                        model: ProfileFile,
-                        required: false,
-                        where: { user_id: userId },
-                        attributes: ["id", "file"],
-                    },
-                ],
-            }).then((res) => {
-                if (res)
-                    return {
-                        ...res.dataValues,
-                    };
-                else res;
+                raw: true,
             });
+            if (!profile) {
+                return await createProfile(userId);
+            }
+            return profile;
         } catch (err) {
             console.log(err);
             throw new Error(err);
@@ -105,14 +96,9 @@ module.exports = {
         try {
             const profile = await Profile.findOne({
                 where: { user_id: userId },
-            }).then((res) => {
-                if (res) return res.dataValues;
-                else {
-                    //없으면 새로 생성
-                    return createProfile(userId);
-                }
             });
 
+            if (!profile) return;
             for (let i = 0; i < files.length; i++) {
                 await ProfileFile.create({
                     file: files[i],
@@ -185,7 +171,7 @@ module.exports = {
                     return res.dataValues;
                 });
             });
-            console.log("lecturepost", lecturePosts);
+
             const data_list = [];
 
             for (let l = 0; l < lecturePosts.length; l++) {

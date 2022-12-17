@@ -10,7 +10,7 @@ router.get("/", authChecker, userController.getUserInfo);
 router.post(
     "/",
     authChecker,
-    upload("/user").any("image"),
+    upload("user").any("image"),
     userController.updateProfileImage
 );
 router.post(
