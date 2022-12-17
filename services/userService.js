@@ -3,18 +3,24 @@ const UserProfileImg = require("../models/userProfileImg");
 
 module.exports = {
     findUserById: async (id) => {
-        return await User.findOne({
-            where: { id: id },
-            include: [
-                {
-                    model: UserProfileImg,
-                    require: false,
-                    where: { user_id: id },
-                },
-            ],
-        })
-            .then((res) => res.dataValues)
-            .catch((error) => console.log(error));
+        try {
+            return await User.findOne({
+                where: { id: id },
+                include: [
+                    {
+                        model: UserProfileImg,
+                        required: false,
+                        where: { user_id: id },
+                    },
+                ],
+            }).then((res) => {
+                if (res) return res.dataValues;
+                else res;
+            });
+        } catch (error) {
+            console.log(error);
+            throw new Error(error);
+        }
     },
 
     getUserInfo: async (id) => {
@@ -29,12 +35,14 @@ module.exports = {
             ],
         })
             .then((res) => {
-                return {
-                    id: res.dataValues.id,
-                    nickname: res.dataValues.nickname,
-                    level: res.dataValues.level,
-                    profileImg: res.dataValues.UserProfileImg.file,
-                };
+                if (res)
+                    return {
+                        id: res.dataValues.id,
+                        nickname: res.dataValues.nickname,
+                        level: res.dataValues.level,
+                        profileImg: res.dataValues.UserProfileImg.file,
+                    };
+                return res;
             })
             .catch((error) => console.log(error));
     },
