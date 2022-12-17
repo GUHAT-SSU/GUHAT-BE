@@ -11,7 +11,11 @@ router.get(
     authChecker,
     lectureController.getRecruitPosts
 );
-
-router.get("/", authChecker, lectureController.getLecture);
+router.get(
+    "/:lectureId/review/all",
+    authChecker,
+    lectureController.getReviewAllPosts
+)
+router.get("/:lectureId", authChecker, lectureController.getLecture);
 
 module.exports = router;

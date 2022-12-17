@@ -32,7 +32,7 @@ module.exports = {
 
     getLecture: async (req, res) => {
         try {
-            const lectureId = req.query.lectureId;
+            const lectureId = req.params.lectureId;
             if (!lectureId) {
                 return res.status(400).json("잘못된 요청");
             }
@@ -50,7 +50,33 @@ module.exports = {
             res.status(500).json(err);
         }
     },
-
+    getReviewAllPosts: async (req, res) => {
+        try {
+            const userId = req.userId;
+            const lectureId = req.params.lectureId;
+            let page = req.query.page;
+            console.log("lectureId : ", lectureId);
+            if (!lectureId) {
+                return res.status(404).send({
+                    message: "cannot get lectureId.........",
+                });
+            }
+            const {lecture, reviewList} = await lectureService.findReviewAll(
+                page,
+                lectureId,
+                userId,
+            );
+            return res.status(200).json({
+                ok: true,
+                message: "해당과목 리뷰글 조회 성공!",
+                lecture,
+                reviewList
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
     getRecruitPosts: async (req, res) => {
         try {
             const lectureId = req.params.lectureId;
