@@ -131,7 +131,7 @@ module.exports = {
         }
     },
 
-    /* ------- GET : 작성한 구인글 리스트 조회 --------- */
+    /* ------- GET : 참여 이력 조회 --------- */
     findMyPosts: async (userId, page) => {
         try {
             let major;
@@ -267,7 +267,7 @@ module.exports = {
             throw new Error(err);
         }
     },
-    /* ------- GET : 작성한 구인글 리스트 조회 끝--------- */
+    /* ------- GET : 참여 이력 조회 끝--------- */
 
     /* ------- GET : 프로필 검색 결과---- ----- */
     findProfileBySkill: async (stack) => {
