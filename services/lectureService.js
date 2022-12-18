@@ -104,7 +104,9 @@ module.exports = {
                 let likeCnt = 0;
                 const likes = await LectureReviewLike.findAll({where: {review_id: review.id}});
                 likes.forEach((like)=> {
-                    likeCnt++;
+                    if(like.status === "like") {
+                        likeCnt++;
+                    }
                 })
                 reviewList.push({
                     id: review.id,
