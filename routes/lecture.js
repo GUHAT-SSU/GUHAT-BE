@@ -55,10 +55,4 @@ router.get(
     authChecker,
     lectureController.getReviewComments
 );
-
-router.post(
-    "/:lectureId/review/:reviewId/like",
-    authChecker,
-    lectureController.postReviewLike
-)
 module.exports = router;
