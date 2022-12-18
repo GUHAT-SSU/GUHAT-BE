@@ -5,8 +5,17 @@ module.exports = class LectureReviewLike extends Sequelize.Model {
     static init(sequelize) {
         return super.init(
             {
-               
-
+                status: {
+                    type: Sequelize.STRING(10), //"like"|"dislike"
+                    allowNull: false,
+                    comment: "좋아요|싫어요",
+                },
+                comment: {
+                    type: Sequelize.STRING(300),
+                    allowNull: false,
+                    defaultValue: "",
+                    comment: "댓글",
+                },
             },
             {
                 // 테이블에 대한 설정 지정
@@ -23,20 +32,24 @@ module.exports = class LectureReviewLike extends Sequelize.Model {
     }
     static associate(db) {
         db.LectureReview.hasMany(db.LectureReviewLike, {
-            foreignKey: {name: "writer_id", type: DataTypes.STRING},
-            sourceKey: "writer_id"
+            foreignKey: { name: "writer_id", type: DataTypes.STRING },
+            sourceKey: "writer_id",
         });
         db.LectureReview.hasMany(db.LectureReviewLike, {
-            foreignKey: {name: "review_id"},
+            foreignKey: { name: "review_id" },
             sourceKey: "id",
         });
         db.LectureReview.hasMany(db.LectureReviewLike, {
-            foreignKey: {name: "lecture_id"},
-            sourceKey: "lecture_id"
+            foreignKey: { name: "lecture_id" },
+            sourceKey: "lecture_id",
         });
         db.User.hasMany(db.LectureReviewLike, {
-            foreignKey: {name: "liker_id", type: DataTypes.STRING},
-            sourceKey: "id"
-        })
+            foreignKey: { name: "liker_id", type: DataTypes.STRING },
+            sourceKey: "id",
+        });
+        db.LectureReviewLike.belongsTo(db.LectureReview, {
+            foreignKey: "review_id",
+            sourceKey: "id",
+        });
     }
-};
+}
