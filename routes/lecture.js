@@ -35,6 +35,11 @@ router.get(
     "/:lectureId/review/all",
     authChecker,
     lectureController.getReviewAllPosts
+);
+router.get(
+    "/:lectureId/review/:reviewId",
+    authChecker,
+    lectureController.getReviewDetail
 )
 router.get("/:lectureId", authChecker, lectureController.getLecture);
 

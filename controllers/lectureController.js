@@ -1,3 +1,4 @@
+const lectureProjectService = require("../services/lectureProjectService");
 const lectureService = require("../services/lectureService");
 const postService = require("../services/postService");
 
@@ -147,4 +148,23 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
-};
+    getReviewDetail: async (req, res) => {
+        try {
+            const lectureId = req.params.lectureId;
+            const reviewId = req.params.reviewId;
+            const review = await lectureService.findReviewDetail(
+                req.userId, 
+                lectureId,
+                reviewId
+            );
+            return res.status(200).json({
+                ok: true,
+                message: "리뷰글 상세 조회 성공!",
+                data: review
+            });
+        } catch(err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+}

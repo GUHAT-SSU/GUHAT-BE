@@ -273,4 +273,55 @@ module.exports = {
             throw new Error(error);
         }
     },
-};
+    findReviewDetail: async (userId, lectureId, reviewId) => {
+        try {
+            // 해당 리뷰 가져오기
+            const review = await LectureReview.findOne({
+                where: {id: reviewId},
+                include: [
+                    {
+                        model: LectureReviewFile,
+                        required: false,
+                        where: {review_id: reviewId}
+                    },
+                ],
+            }).then((res) => {
+                    return {
+                        ...res.dataValues,
+                        isOwner: res.dataValues.writer_id === userId
+                    };
+                });
+            const data_list = [];
+            console.log(review);
+            // writer 정보 가져오기
+            const writer = await User.findOne({
+                where: {id: userId}
+            });
+            const lecture = await Lecture.findOne({
+                where: {id: lectureId}
+            });
+            data_list.push({
+                isOwner: review.isOwner,
+                title: review.title,
+                year: lecture.year,
+                semester: lecture.semester,
+                createdAt: review.createdAt,
+                writerId: writer.id,
+                nickname: writer.nickname,
+                writerLevel: writer.level,
+                memberNum: review.memberNum,
+                startDate: `${review.period[0]}월`,
+                endDate: `${review.period[1]}월`,
+                reviewLevel: review.level,
+                subject: review.subject,
+                detail: review.detail,
+                files: review.LectureReviewFile.file
+            })
+            return data_list;
+        } catch(err) {
+            console.log(err);
+            return;
+        }
+    },
+    
+}
