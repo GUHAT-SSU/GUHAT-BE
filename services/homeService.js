@@ -46,7 +46,6 @@ module.exports = {
                 },
                 attributes: ["score"],
             }).then((lectureScore) => {
-                console.log(lectureScore);
                 lectureScore.forEach((score) => {
                     count++;
                     total += score;
@@ -263,7 +262,7 @@ module.exports = {
                     where: { review_id: review.id },
                 }).then((res) => res.map((value) => value.dataValues));
                 likes.forEach((like) => {
-                    likeCount++;
+                    if (like.status === "like") likeCount++;
                 });
                 data_list.push({
                     id: review.id,
