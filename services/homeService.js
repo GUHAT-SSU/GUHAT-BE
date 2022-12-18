@@ -53,21 +53,21 @@ module.exports = {
             })
             if(user) {
                 data_list.push({
-                    id,
-                    nickname,
-                    name,
-                    grade,
-                    univ,
-                    major,
-                    semester,
-                    group,
-                    level,
-                    score,
-                    createdAt,
-                    updatedAt,
+                    id: user.id,
+                    nickname: user.nickname,
+                    name: user.name,
+                    grade: user.grade,
+                    univ: user.univ,
+                    major: user.major,
+                    semester: user.semester,
+                    group: user.group,
+                    level: user.level,
+                    score: user.score,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
                     profileImg: profileImg.file,
-                    currentProject,
-                    reviewScore
+                    currentProject: currentProject,
+                    reviewScore: reviewScore
                 });
             }
             return data_list;
