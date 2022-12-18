@@ -199,4 +199,23 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
+    /* ------ /profile/{profileId}/like --------- */
+    createProfileLike: async (req, res) => {
+        try {
+            const isLike = req.body.isLike;
+            const profileId = req.params.profileId;
+            const message = await profileService.createProfileLike(
+                req.userId,
+                profileId,
+                isLike
+            );
+            return res.status(200).json({
+                ok:true,
+                message: message
+            });
+        } catch(err) {
+            return res.status(500).json(err);
+        }
+        
+    }
 };
