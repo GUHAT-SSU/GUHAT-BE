@@ -52,4 +52,4 @@ module.exports = class LectureReviewLike extends Sequelize.Model {
             sourceKey: "id",
         });
     }
-}
+};

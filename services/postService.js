@@ -296,7 +296,6 @@ module.exports = {
 
     /* ------- GET : 수업 해당 구인글 조회 -------- */
     findPostByLectureId: async (sort, page, lectureId, userId) => {
-        console.log("lectureID", lectureId);
         try {
             let limit = 10;
             let offset = 0;

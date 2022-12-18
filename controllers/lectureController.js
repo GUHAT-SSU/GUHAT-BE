@@ -79,7 +79,7 @@ module.exports = {
 
     getLecture: async (req, res) => {
         try {
-            const lectureId = req.params.lectureId;
+            const lectureId = req.query.lectureId;
             if (!lectureId) {
                 return res.status(400).json("잘못된 요청");
             }
@@ -108,16 +108,16 @@ module.exports = {
                     message: "cannot get lectureId.........",
                 });
             }
-            const {lecture, reviewList} = await lectureService.findReviewAll(
+            const { lecture, reviewList } = await lectureService.findReviewAll(
                 page,
                 lectureId,
-                userId,
+                userId
             );
             return res.status(200).json({
                 ok: true,
                 message: "해당과목 리뷰글 조회 성공!",
                 lecture,
-                reviewList
+                reviewList,
             });
         } catch (err) {
             console.log(err);
@@ -153,41 +153,69 @@ module.exports = {
             const lectureId = req.params.lectureId;
             const reviewId = req.params.reviewId;
             const review = await lectureService.findReviewDetail(
-                req.userId, 
+                req.userId,
                 lectureId,
                 reviewId
             );
             return res.status(200).json({
                 ok: true,
                 message: "리뷰글 상세 조회 성공!",
-                data: review
+                data: review,
             });
-        } catch(err) {
+        } catch (err) {
             console.log(err);
             return res.status(500).json(err);
         }
     },
-    postReviewLike: async(req, res) => {
+
+    createReviewComment: async (req, res) => {
         try {
+            const lectureId = req.params.lectureId;
             const reviewId = req.params.reviewId;
-            const isLike = req.body.isLike;
+            const like = req.body.like;
             const comment = req.body.comment;
-            
-            const commentId = await lectureService.likeReview(
+            const result = await lectureService.createComment(
                 req.userId,
                 reviewId,
-                isLike,
+                like,
                 comment
             );
-            if (commentId == null) {return res.status(500).send("작성자가 댓글을 남길 수 없습니다.")}  
-            res.status(200).json({
+            return res.status(200).json({
                 ok: true,
-                message: "리뷰 댓글 남기기 성공!",
-                commentId: commentId
-            }) 
-        } catch(err) {
+                message: "리뷰글 댓글 작성 성공!",
+                data: result,
+            });
+        } catch (err) {
             console.log(err);
             return res.status(500).json(err);
-        }       
-    }
-}
+        }
+    },
+    getReviewComments: async (req, res) => {
+        try {
+            const lectureId = req.params.lectureId;
+            const reviewId = req.params.reviewId;
+            const lecture = await lectureService.findLectureById(lectureId);
+            const result = await lectureService.findReviewCommentByReviewId(
+                req.userId,
+                reviewId
+            );
+            const canWrite = result.findIndex(
+                (comment) => comment.liker_id === req.userId
+            );
+            console.log("canwrite", canWrite);
+
+            return res.status(200).json({
+                ok: true,
+                message: "리뷰글 댓글 조회 성공!",
+                data: {
+                    canWrite: canWrite === -1,
+                    lecture: lecture,
+                    comments: result,
+                },
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+};

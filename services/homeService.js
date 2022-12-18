@@ -11,70 +11,63 @@ const {
     LectureProject,
     MemberReview,
     LectureReview,
-    LectureReviewLike
+    LectureReviewLike,
+    LectureProjectMember,
 } = require("../models");
 const { myFindMajor } = require("../utils/myFunction");
 
 module.exports = {
-    getUserInfo: async(userId) => {
+    getUserInfo: async (userId) => {
         try {
             const user = await User.findOne({
-                where: {id: userId}
-            })
+                where: { id: userId },
+            });
             const data_list = [];
             const profileImg = await UserProfileImg.findOne({
                 where: {
-                    user_id: userId
-                }
-            })
+                    user_id: userId,
+                },
+            });
             // lectureProject 에서 유저가 가지고 있는 lectureProject 모두 count
             let currentProject = 0;
-            const lectureProject = await LectureProject.findAll({
+            const lectureProject = await LectureProjectMember.findAll({
                 where: {
-                    user_id: userId
-                }
+                    member_id: userId,
+                },
             });
             lectureProject.forEach((project) => {
                 currentProject++;
-            })
+            });
             let total = 0;
             let count = 0;
             const reviewScore = await MemberReview.findAll({
                 where: {
-                    receiver_id: userId
+                    receiver_id: userId,
                 },
-                attributes: ["score"]
+                attributes: ["score"],
             }).then((lectureScore) => {
                 lectureScore.forEach((score) => {
                     count++;
                     total += score;
                 });
                 return total / count;
-            })
-            if(user) {
-                data_list.push({
-                    id: user.id,
-                    nickname: user.nickname,
-                    name: user.name,
-                    grade: user.grade,
-                    univ: user.univ,
-                    major: user.major,
-                    semester: user.semester,
-                    group: user.group,
-                    level: user.level,
-                    score: user.score,
-                    createdAt: user.createdAt,
-                    updatedAt: user.updatedAt,
-                    profileImg: profileImg.file,
-                    currentProject: currentProject,
-                    reviewScore: reviewScore
-                });
-            }
-            return data_list;
+            });
+
+            const data = {
+                ...user.dataValues,
+                profileImg: profileImg.file ? profileImg.file : null,
+                currentProject,
+                reviewScore,
+            };
+
+            delete data.token;
+            delete data.password;
+            console.log("user", data);
+            return data;
         } catch (error) {
             console.log(error);
         }
-    }, 
+    },
     findLecturePosts: async (userId) => {
         try {
             let major;
@@ -113,7 +106,7 @@ module.exports = {
             for (let l = 0; l < lecturePosts.length; l++) {
                 // lecturePost의 lecture_id로 Lecture에서 해당 과목 찾기
                 const lecturePost = lecturePosts[l];
-                console.log("개별 post : ", lecturePost);
+
                 const lecture = await Lecture.findOne({
                     where: {
                         id: lecturePost.lecture_id,
@@ -226,7 +219,7 @@ module.exports = {
             throw Error(err);
         }
     },
-    findReviews: async(userId) => {
+    findReviews: async (userId) => {
         try {
             let limit = 10;
             const reviews = await LectureReview.findAll({
@@ -236,16 +229,15 @@ module.exports = {
                 return res.map((res) => {
                     return {
                         ...res.dataValues,
-                        isOwner: res.dataValues.writer_id === userId
+                        isOwner: res.dataValues.writer_id === userId,
                     };
                 });
             });
-            
+
             const data_list = [];
             console.log(reviews);
             // lecture 정보, wirter, title, detail. likeCOujt
-            for(let r = 0; r < reviews.length; r++) {
-                
+            for (let r = 0; r < reviews.length; r++) {
                 const review = reviews[r];
                 const lecture = await Lecture.findOne({
                     where: {
@@ -253,24 +245,24 @@ module.exports = {
                     },
                 }).then((result) => {
                     return result.dataValues;
-                })
+                });
                 const writer = await User.findOne({
-                    where: {id: review.writer_id},
+                    where: { id: review.writer_id },
                     include: [
                         {
                             model: UserProfileImg,
                             required: false,
-                            where: { user_id: review.writer_id},
-                        },          
-                    ]
-                })
+                            where: { user_id: review.writer_id },
+                        },
+                    ],
+                });
                 // likeCount 세기
                 let likeCount = 0;
                 const likes = await LectureReviewLike.findAll({
-                    where: {review_id: review.id}
+                    where: { review_id: review.id },
                 }).then((res) => res.map((value) => value.dataValues));
                 likes.forEach((like) => {
-                    likeCount++;
+                    if (like.status === "like") likeCount++;
                 });
                 data_list.push({
                     id: review.id,
@@ -279,6 +271,7 @@ module.exports = {
                         name: lecture.name,
                         professors: JSON.parse(lecture.professor),
                         semester: lecture.semester,
+                        year: lecture.year,
                         schedule: JSON.parse(lecture.schedule),
                     },
                     writer: {
@@ -292,15 +285,13 @@ module.exports = {
                     detail: review.detail,
                     viewCount: review.viewCnt,
                     likeCount: likeCount,
-                    isOwner: review.isOwner
-                })
+                    isOwner: review.isOwner,
+                });
             }
             return data_list;
-
         } catch (err) {
             console.log(err);
             throw Error(err);
         }
-    }
-    
+    },
 };

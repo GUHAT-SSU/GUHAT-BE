@@ -6,6 +6,8 @@ const { upload } = require("../utils/s3");
 const multer = require("multer");
 const router = express.Router();
 
+router.get("/", authChecker, lectureController.getLecture);
+
 // 과목 페이지에 있는 것들 : 과목별 리뷰, 과목별 모집글
 router.post(
     "/:lectureId/review/new",
@@ -40,8 +42,19 @@ router.get(
     "/:lectureId/review/:reviewId",
     authChecker,
     lectureController.getReviewDetail
-)
-router.get("/:lectureId", authChecker, lectureController.getLecture);
+);
+
+router.post(
+    "/:lectureId/review/:reviewId/comment",
+    authChecker,
+    lectureController.createReviewComment
+);
+
+router.get(
+    "/:lectureId/review/:reviewId/comment",
+    authChecker,
+    lectureController.getReviewComments
+);
 
 router.post(
     "/:lectureId/review/:reviewId/like",

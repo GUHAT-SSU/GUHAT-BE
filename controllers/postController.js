@@ -97,7 +97,6 @@ module.exports = {
 
     /* ---------------- GET '/posting/lecture/:postId' 구인글 상세 조회 ---------------------- */
     getPosting: async (req, res) => {
-        console.log("개별조회");
         try {
             // 쿼리스트링에서 sort 옵션 가져오기
             const userId = req.userId;
@@ -180,4 +179,6 @@ module.exports = {
         }
     },
     /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 끝 ----------------- */
+
+    /* -------------- POST'/posting/lecture/close? postId={postId}' 구인글 마감 ----------------- */
 };

@@ -4,11 +4,12 @@ const {
     User,
     LectureReviewFile,
     LectureReview,
-    LectureReviewLike
+    LectureReviewLike,
 } = require("../models");
 const { Op, Error } = require("sequelize");
 const bodyParser = require("body-parser");
 const scheduleService = require("./scheduleService");
+const userService = require("./userService");
 module.exports = {
     findLecture: async (data, user) => {
         try {
@@ -74,32 +75,36 @@ module.exports = {
             }
             // 해당 과목 리뷰글 모두 가져오기
             const reviews = await LectureReview.findAll({
-                where: {lecture_id: lectureId}
+                where: { lecture_id: lectureId },
             }).then((res) => {
                 return res.map((res) => {
                     return {
                         ...res.dataValues,
                         // 작성자인지 보여주기
-                        isOwner: res.dataValues.writer_id === userId
+                        isOwner: res.dataValues.writer_id === userId,
                     };
                 });
             });
             const lecture = await Lecture.findOne({
-                where: {id: lectureId},
-            }).then((res) => {return res.dataValues});
+                where: { id: lectureId },
+            }).then((res) => {
+                return res.dataValues;
+            });
 
             const reviewList = [];
 
-            for(let r = 0; r < reviews.length; r++) {
+            for (let r = 0; r < reviews.length; r++) {
                 const review = reviews[r];
                 // 작성자 정보 불러오기
                 const writer = await User.findByPk(review.writer_id);
                 // 파일 수 세기
                 let fileCnt = 0;
-                const files = await LectureReviewFile.findAll({where: {review_id: review.id}});
+                const files = await LectureReviewFile.findAll({
+                    where: { review_id: review.id },
+                });
                 files.forEach((file) => {
                     fileCnt++;
-                }) 
+                });
                 // 좋아요 수 세기
                 let likeCnt = 0;
                 const likes = await LectureReviewLike.findAll({where: {review_id: review.id}});
@@ -120,11 +125,10 @@ module.exports = {
                     viewCnt: review.viewCnt,
                     likeCnt: likeCnt,
                     createdAt: review.createdAt,
-                    isOwner: review.isOwner
-                })
-                
+                    isOwner: review.isOwner,
+                });
             }
-            return {lecture, reviewList};   
+            return { lecture, reviewList };
         } catch (err) {
             console.log(err);
             return;
@@ -228,12 +232,6 @@ module.exports = {
                 writer_id: writer.id,
                 lecture_id: lectureId,
             });
-            // const newReviewFile = await LectureReviewFile.create({
-            //     review_id: newReview.id,
-            //     lecture_id: lecture.id,
-            //     price: 0,
-            //     file: post.reviewFile.file,
-            // });
 
             return {
                 type: "Success",
@@ -280,24 +278,27 @@ module.exports = {
             // 해당 리뷰 가져오기
             const review = await LectureReview.findOne({
                 where: {id: reviewId},
+                include: [
+                    {
+                        model: LectureReviewFile,
+                        required: false,
+                        where: {review_id: reviewId}
+                    },
+                ],
             }).then((res) => {
-                    return {
-                        ...res.dataValues,
-                        isOwner: res.dataValues.writer_id === userId
-                    };
-                });
-            const data_list = [];
+                return {
+                    ...res.dataValues,
+                    isOwner: res.dataValues.writer_id === userId,
+                };
+            });
+
             console.log(review);
             // writer 정보 가져오기
-            const writer = await User.findOne({
-                where: {id: userId}
-            });
+            const writer = await userService.getUserInfo(review.writer_id);
+
             const lecture = await Lecture.findOne({
-                where: {id: lectureId}
+                where: { id: lectureId },
             });
-            const files = await LectureReviewFile.findAll({
-                where: {review_id: reviewId}
-            })
             data_list.push({
                 isOwner: review.isOwner,
                 title: review.title,
@@ -307,13 +308,14 @@ module.exports = {
                 writerId: writer.id,
                 nickname: writer.nickname,
                 writerLevel: writer.level,
+                profileImg: writer.profileImg,
                 memberNum: review.memberNum,
                 startDate: `${review.period[0]}월`,
                 endDate: `${review.period[1]}월`,
                 reviewLevel: review.level,
-                subject: review.subject,
+                subject: review.topic,
                 detail: review.detail,
-                files: files
+                files: review.LectureReviewFile.file
             })
             return data_list;
         } catch(err) {
@@ -321,48 +323,32 @@ module.exports = {
             return;
         }
     },
-    likeReview: async(userId, reviewId, isLike, comment) => {
+    createComment: async (userId, reviewId, like, comment) => {
         try {
-            const review = await LectureReview.findOne({where: {id: reviewId}});
-            // 똑같은 작성자가 리뷰를 남길 경우
-            if(userId === review.writer_id) {
-                console.log("작성자가 리뷰를 남길 수 없음.");
-                return 
-            }
-            else {
-                if(isLike === true) {
-                    const result = await LectureReviewLike.create({
-                        status: "like",
-                        comment: comment,
-                        writer_id: review.writer_id,
-                        liker_id: userId,
-                        review_id: reviewId,
-                        lecture_id: review.lecture_id
-                    }).then((res) => {  
-                        console.log("리뷰 추천 성공", res);
-                        return res.id;
-                    });
-                    return result;
-                } else {
-                    console.log("싫어요");
-                    const result = await LectureReviewLike.create({
-                        status: "dislike",
-                        comment: comment,
-                        writer_id: review.writer_id,
-                        liker_id: userId,
-                        review_id: reviewId,
-                        lecture_id: review.lecture_id,
-                    }).then((res) => {
-                        console.log("리뷰 비추천 성공", res);
-                        return res.id
-                    });
-                    return result;
-                }
-            }   
-        } catch(err) {
+            const review = await LectureReview.findByPk(reviewId);
+            await review.createLectureReviewLike({
+                status: like,
+                comment: comment,
+                review_id: reviewId,
+                liker_id: userId,
+                lecture_id: review.lecture_id,
+            });
+        } catch (err) {
             console.log(err);
             return;
         }
-    }
-    
-}
+    },
+    findReviewCommentByReviewId: async (userId, reviewId) => {
+        try {
+            return await LectureReviewLike.findAll({
+                where: {
+                    review_id: reviewId,
+                },
+                raw: true,
+            });
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+    },
+};
