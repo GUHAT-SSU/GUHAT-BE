@@ -321,5 +321,48 @@ module.exports = {
             return;
         }
     },
+    likeReview: async(userId, reviewId, isLike, comment) => {
+        try {
+            const review = await LectureReview.findOne({where: {id: reviewId}});
+            // 똑같은 작성자가 리뷰를 남길 경우
+            if(userId === review.writer_id) {
+                console.log("작성자가 리뷰를 남길 수 없음.");
+                return 
+            }
+            else {
+                if(isLike === true) {
+                    const result = await LectureReviewLike.create({
+                        status: "like",
+                        comment: comment,
+                        writer_id: review.writer_id,
+                        liker_id: userId,
+                        review_id: reviewId,
+                        lecture_id: review.lecture_id
+                    }).then((res) => {  
+                        console.log("리뷰 추천 성공", res);
+                        return res.id;
+                    });
+                    return result;
+                } else {
+                    console.log("싫어요");
+                    const result = await LectureReviewLike.create({
+                        status: "dislike",
+                        comment: comment,
+                        writer_id: review.writer_id,
+                        liker_id: userId,
+                        review_id: reviewId,
+                        lecture_id: review.lecture_id,
+                    }).then((res) => {
+                        console.log("리뷰 비추천 성공", res);
+                        return res.id
+                    });
+                    return result;
+                }
+            }   
+        } catch(err) {
+            console.log(err);
+            return;
+        }
+    }
     
 }

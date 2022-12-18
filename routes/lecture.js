@@ -43,4 +43,9 @@ router.get(
 )
 router.get("/:lectureId", authChecker, lectureController.getLecture);
 
+router.post(
+    "/:lectureId/review/:reviewId/like",
+    authChecker,
+    lectureController.postReviewLike
+)
 module.exports = router;

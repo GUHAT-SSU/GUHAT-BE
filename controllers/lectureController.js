@@ -167,4 +167,27 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
+    postReviewLike: async(req, res) => {
+        try {
+            const reviewId = req.params.reviewId;
+            const isLike = req.body.isLike;
+            const comment = req.body.comment;
+            
+            const commentId = await lectureService.likeReview(
+                req.userId,
+                reviewId,
+                isLike,
+                comment
+            );
+            if (commentId == null) {return res.status(500).send("작성자가 댓글을 남길 수 없습니다.")}  
+            res.status(200).json({
+                ok: true,
+                message: "리뷰 댓글 남기기 성공!",
+                commentId: commentId
+            }) 
+        } catch(err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }       
+    }
 }
