@@ -278,13 +278,6 @@ module.exports = {
             // 해당 리뷰 가져오기
             const review = await LectureReview.findOne({
                 where: {id: reviewId},
-                include: [
-                    {
-                        model: LectureReviewFile,
-                        required: false,
-                        where: {review_id: reviewId}
-                    },
-                ],
             }).then((res) => {
                     return {
                         ...res.dataValues,
@@ -300,6 +293,9 @@ module.exports = {
             const lecture = await Lecture.findOne({
                 where: {id: lectureId}
             });
+            const files = await LectureReviewFile.findAll({
+                where: {review_id: reviewId}
+            })
             data_list.push({
                 isOwner: review.isOwner,
                 title: review.title,
@@ -315,7 +311,7 @@ module.exports = {
                 reviewLevel: review.level,
                 subject: review.subject,
                 detail: review.detail,
-                files: review.LectureReviewFile.file
+                files: files
             })
             return data_list;
         } catch(err) {
