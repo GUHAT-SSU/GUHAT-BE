@@ -180,4 +180,6 @@ module.exports = {
         }
     },
     /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 끝 ----------------- */
+
+    /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 ----------------- */
 };

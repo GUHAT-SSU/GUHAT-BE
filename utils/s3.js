@@ -15,8 +15,31 @@ const s3 = new S3({
     region: region,
 });
 
+function checkFileType(req, file, cb) {
+    const filetypes = /jpg|jpeg|png|pdf|docx/;
+
+    const mimetype = filetypes.test(file.mimetype);
+
+    if (mimetype) {
+        return cb(null, true);
+    } else {
+        console.log("건너뛰기");
+        console.log(file);
+        // const blob = file.buffer;
+        // const postData = JSON.parse(blob.toString("utf8"));
+        // console.log("blob", postData);
+        req.requestData = file;
+        cb(null, false);
+        return;
+    }
+}
+
 const upload = (file_dir) =>
     multer({
+        limits: { fileSize: 2000000 },
+        fileFilter: function (req, file, cb) {
+            checkFileType(req, file, cb);
+        },
         storage: multerS3({
             s3: s3,
             bucket: bucketName,

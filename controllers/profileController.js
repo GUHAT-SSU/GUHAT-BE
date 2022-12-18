@@ -36,20 +36,28 @@ module.exports = {
                 req.userId
             );
 
-            // const teamHistory = await lectureProjectService.getMyProjects(
-            //     req.userId
-            // );
+            const teamHistoryResult = await lectureProjectService.getMyProjects(
+                req.userId
+            );
+
+            const teamHistory = teamHistoryResult.map((project) => {
+                return {
+                    projectId: project.project.id,
+                    postId: project.id,
+                    title: project.title,
+                    lectureId: project.lecture_id,
+                    startDate: project.project.createdAt,
+                };
+            });
+
             let file = [];
             if (profile) {
                 file = await ProfileFile.findAll({
                     where: { user_id: req.userId },
-
                     raw: true,
                 });
             }
 
-            console.log("profile", profile);
-            //TODO 파일 추가
             return res.status(200).json({
                 ok: true,
                 message: "유저 프로필 조회 성공",
@@ -62,7 +70,7 @@ module.exports = {
                     personality: profile.personality
                         ? JSON.parse(profile.personality)
                         : [0, 0, 0],
-                    hisotry: [],
+                    history: teamHistory ? teamHistory : [],
                     files: file ? file : [],
                 },
             });
@@ -103,9 +111,7 @@ module.exports = {
     updateProfileIntro: async (req, res) => {
         const intro = req.body.introduction;
         const detail = req.body.detail;
-        if (!intro || !detail) {
-            return res.status(400).json({ message: "잘못된 요청" });
-        }
+
         try {
             const profile = await profileService.findProfileByUserId(
                 req.userId
@@ -167,7 +173,8 @@ module.exports = {
     updateProfileDetail: async (req, res) => {
         const skill = req.body.skill;
         const personality = req.body.personality;
-
+        console.log(req.body);
+        console.log(req.userId);
         if (!skill | !personality) {
             return res.status(400).json({ message: "잘못된 요청" });
         }
