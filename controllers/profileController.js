@@ -216,6 +216,40 @@ module.exports = {
         } catch(err) {
             return res.status(500).json(err);
         }
-        
+
+    },
+    getMyReview: async (req, res) => {
+        try {
+            const page = req.query.page;
+            const data = await profileService.findMyReview(
+                page,
+                req.userId
+            );
+            return res.status(200).json({
+                ok: true,
+                message: "프로필 내가 작성한 리뷰 조회 성공!",
+                data
+            })
+        } catch(err) {
+            return res.status(500).json(err);
+        }
+    },
+    getMemberReview: async (req, res) => {
+        try {
+            const profileId = req.params.profileId;
+            const {isOwner, reviewList} = await profileService.findMemberReview(
+                req.userId,
+                profileId
+            );
+            return res.status(200).json({
+                ok: true,
+                message: "팀원 리뷰 조회 성공!",
+                isOwner,
+                reviewList
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
     }
 };

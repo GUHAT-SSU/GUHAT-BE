@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
+const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const lectureService = require("./lectureService");
 const userService = require("./userService");
@@ -39,6 +39,8 @@ module.exports = {
                 type: "Success",
                 message: "You successfully created a new post!",
                 postId: newPost.dataValues.id,
+                newProject: newProject!==null,
+                newProjectMember: newProjectMember!==null 
             };
         } catch (err) {
             console.log(err);
@@ -406,6 +408,76 @@ module.exports = {
         } catch (err) {
             console.log(err);
             throw new Error(err);
+        }
+    },
+    /* --------- 팀플 리뷰 리스트 전체 조회  ----------- */
+    findAllReviews: async(userId, sort, page) => {
+        try {
+            // pagination
+            let limit = 10;
+            let offset = 0;
+            if(page > 1) {
+                offset = limit * (page - 1);
+            }
+            const reviews = await LectureReview.findAll().then((res) => {
+                return res.map((res) => {
+                    return {
+                        ...res.dataValues,
+                        // 작성자인지 보여주기
+                        isOwner: res.dataValues.writer_id === userId,
+                    };
+                });
+            });
+            const data_list = [];
+            for(let r = 0; r < reviews.length; r++) {
+                const review = reviews[r];
+                // 해당 과목 정보 불러오기
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: review.lecture_id,
+                    }
+                })
+                // 작성자 정보 불러오기
+                const writer = await User.findByPk(review.writer_id);
+                // 파일 수 세기
+                let fileCnt = 0;
+                const files = await LectureReviewFile.findAll({
+                    where: { review_id: review.id },
+                });
+                files.forEach((file) => {
+                    fileCnt++;
+                });
+                // 좋아요 수 세기
+                let likeCnt = 0;
+                const likes = await LectureReviewLike.findAll({where: {review_id: review.id}});
+                likes.forEach((like)=> {
+                    if(like.status === "like") {
+                        likeCnt++;
+                    }
+                })
+                data_list.push({
+                    lecture,
+                    review: {
+                        id: review.id,
+                        title: review.title,
+                        reviewLevel: review.level,
+                        memeberNum: review.memberNum,
+                        fileCnt: fileCnt,
+                        detail: review.detail,
+                        nickname: writer.nickname,
+                        writerLevel: writer.level,
+                        viewCount: review.viewCnt,
+                        likeCount: likeCnt,
+                        createdAt: review.createdAt,
+                        isOwner: review.isOwner,
+                    }
+                });
+            }
+            const sorted_list = mySort(data_list, sort);
+            return sorted_list;
+        } catch(err) {
+            console.log(err);
+            return;
         }
     },
 };
