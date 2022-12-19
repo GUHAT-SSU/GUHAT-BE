@@ -1,7 +1,8 @@
-const { LecturePost, Profile, LectureProject, MemberReview, ProfileFile, LectureProjectMember} = require("../models");
+const { LecturePost, Profile, LectureProject, MemberReview, ProfileFile, LectureProjectMember, User} = require("../models");
 const lectureProjectService = require("../services/lectureProjectService");
 const postService = require("../services/postService");
 const profileService = require("../services/profileService");
+const userService = require("../services/userService");
 
 module.exports = {
     createProject: async (req, res) => {
@@ -82,7 +83,10 @@ module.exports = {
             const profile = await profileService.findProfileByUserId(
                 ownerId
             );
-            if(userId === ownerId) return res.status(500).send("자신의 프로필을 조회하려고 함.");
+            if(userId === ownerId) return res.status(500).json({
+                ok:false,
+                message: "자신의 프로필을 조회하려고 함."
+            });
             
             const teamHistoryResult = await lectureProjectService.getMyProjects(
                 ownerId
@@ -135,6 +139,7 @@ module.exports = {
                     }
                 }
             }  
+            const writer = await userService.getUserInfo(ownerId);
             /* ------- canAccess ---------- */
             comment_list = await MemberReview.findAll({
                 where: {receiver_id: ownerId},
@@ -147,6 +152,8 @@ module.exports = {
                 message: "다른 사람 프로필 조회 성공",
                 data: {
                     canAccess: canAccess,
+                    nickname: writer.nickname,
+                    profileImg: writer.profileImg,
                     id: profile.id,
                     detail: profile.detail,
                     introduction: profile.introduction,
