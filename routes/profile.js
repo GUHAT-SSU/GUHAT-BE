@@ -6,7 +6,10 @@ const { upload } = require("../utils/s3");
 const router = express.Router();
 
 router.get("/", authChecker, profileController.getProfile);
-router.get("/lecture/my", authChecker, profileController.getMyPost); // (check) 작성한 구인글 상세 조회
+router.get("/lecture/my", authChecker, profileController.getMyPost); // 참여 이력 조회
+router.get("/review/my", authChecker, profileController.getMyReview); // 작성한 리뷰 조회
+router.get("/:profileId/review", authChecker, profileController.getMemberReview); // 멤버 리뷰 조회
+
 router.patch("/intro", authChecker, profileController.updateProfileIntro);
 router.patch("/detail", authChecker, profileController.updateProfileDetail);
 router.patch("/mode", authChecker, profileController.updateProfileMode);

@@ -9,6 +9,10 @@ const {
     Profile,
     ProfileFile,
     ProfileLike,
+    LectureReview,
+    LectureReviewFile,
+    LectureReviewLike,
+    MemberReview
 } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const userService = require("./userService");
@@ -331,5 +335,123 @@ module.exports = {
             console.log(err);
             return;
         } 
+    },
+    findMyReview: async (page, userId) => {
+        try {
+            // pagination
+            let limit = 10;
+            let offset = 0;
+            if(page > 1) {
+                offset = (page - 1) * limit;
+            }
+            const data_list = [];
+            // 해당 과목 리뷰글 모두 가져오기
+            const reviews = await LectureReview.findAll({
+                order: [["createdAt", "DESC"]],
+                where: {
+                    writer_id: userId
+                },
+                // pagination
+                offset: offset,
+                limit: limit,
+            }).then((res) => {
+                return res.map((res)=> {
+                    return {
+                        ...res.dataValues,
+                    };
+                });
+            });
+            for(let r = 0; r < reviews.length; r++) {
+                const review = reviews[r];
+                // 해당 과목 정보 불러오기
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: review.lecture_id,
+                    }
+                })
+                // 작성자 정보 불러오기
+                const writer = await User.findByPk(review.writer_id);
+                // 파일 수 세기
+                let fileCnt = 0;
+                const files = await LectureReviewFile.findAll({
+                    where: { review_id: review.id },
+                });
+                files.forEach((file) => {
+                    fileCnt++;
+                });
+                // 좋아요 수 세기
+                let likeCnt = 0;
+                const likes = await LectureReviewLike.findAll({where: {review_id: review.id}});
+                likes.forEach((like)=> {
+                    if(like.status === "like") {
+                        likeCnt++;
+                    }
+                })
+                data_list.push({
+                    lecture,
+                    review: {
+                        id: review.id,
+                        title: review.title,
+                        reviewLevel: review.level,
+                        memeberNum: review.memberNum,
+                        fileCnt: fileCnt,
+                        detail: review.detail,
+                        nickname: writer.nickname,
+                        writerLevel: writer.level,
+                        viewCnt: review.viewCnt,
+                        likeCnt: likeCnt,
+                        createdAt: review.createdAt,
+                    }
+                });
+            }
+            return data_list;
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+    },
+    findMemberReview: async(userId, profileId) => {
+        try {
+            const reviewList = [];
+            const isOwner = await Profile.findOne({
+                where: {user_id: userId}
+            }).then((res) => {
+                    if(res.dataValues.id === profileId) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+            });
+            const profileOwnerId = await Profile.findOne({
+                where: {
+                    id: profileId
+                }
+            }).then((res) => {
+                return res.dataValues.user_id
+            })
+            // 멤버 리뷰 모두 불러오기
+            const memberReviews = await MemberReview.findAll({
+                where: {receiver_id: profileOwnerId}
+            }).then((res) => {
+                return res.map((res) => {
+                    return {
+                        ...res.dataValues,
+                    }
+                })
+            });
+            for(let r = 0; r < memberReviews.length; r++) {
+                const memberReview = memberReviews[r];
+                reviewList.push({
+                    createdAt: memberReview.createdAt,
+                    score: memberReview.score,
+                    comment: memberReview.comment,
+                    emojiType: memberReview.emojiType
+                });
+            }
+            return {isOwner, reviewList};
+        } catch (err) {
+            console.log(err);
+            return;
+        }
     }
 };

@@ -10,7 +10,7 @@ module.exports = {
         return major;
     },
     mySort: async (data_list, sort) => {
-        return data_list.sort(function(a, b) {
+        data_list.sort(function(a, b) {
             if(sort === "popular") { // 조회순
                 if(a.viewCount > b.viewCount) {
                     return -1; 
@@ -33,6 +33,17 @@ module.exports = {
                     return 0;
                 }
             }
+            else if(sort === "like") {  // 추천순
+                if(a.review.likeCount > b.review.likeCount) {
+                    return 1;
+                }
+                else if(a.likeCount < b.likeCount) {
+                    return -1;
+                }
+                else {
+                    return 0;
+                }
+            }
             else { // sort === null 이면 최신순
                 if(a.createdAt > b.createdAt) {
                     return -1;
@@ -45,5 +56,6 @@ module.exports = {
                 }   
             }
         })
+        return data_list;
     }
 }
