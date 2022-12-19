@@ -83,33 +83,86 @@ module.exports = {
             throw new Error(err);
         }
     },
-    createMemberReview: async(userId, lectureId, profileId, emojiType, score, comment) => {
+    createMemberReview: async (
+        userId,
+        profileId,
+        emojiType,
+        score,
+        comment
+    ) => {
         try {
             // user_id 가져오기
             const receiverId = await Profile.findOne({
-                where: {id: profileId}
-            }).then((res) => {return res.dataValues.user_id});
-            if(receiverId === userId) return "Error";
-            console.log(lectureId);
+                where: { id: profileId },
+            }).then((res) => {
+                return res.dataValues.user_id;
+            });
+            if (receiverId === userId) return "Error";
+
             // lectureId로 lectureProject_id 찾기
-            const lectureProjectId = await LectureProject.findOne({
-                where: {lecture_id: lectureId}
-            }).then((res) => {return res.dataValues.id});
+
+            let sameProject = null;
+            // 로그인된 유저가 참여한 project의 id 가져오기
+            const userProjects = await LectureProjectMember.findAll({
+                where: { member_id: userId },
+            }).then((res) => {
+                return res.map((value) => {
+                    console.log(
+                        "userProject Id: ",
+                        value.dataValues.lectureProject_id
+                    );
+                    return value.dataValues.lectureProject_id;
+                });
+            });
+            console.log("userProjects ", userProjects);
+            // 해당 프로필 owner가 참여한 project의 id 가져오기
+            const ownerProjects = await LectureProjectMember.findAll({
+                where: { member_id: receiverId },
+            }).then((res) => {
+                return res.map((value) => {
+                    console.log(
+                        "ownerProject Id: ",
+                        value.dataValues.lectureProject_id
+                    );
+                    return value.dataValues.lectureProject_id;
+                });
+            });
+            console.log("ownerProjects ", ownerProjects);
+            for (let i = 0; i < userProjects.length; i++) {
+                for (let j = 0; j < ownerProjects.length; j++) {
+                    if (userProjects[i] === ownerProjects[i]) {
+                        sameProject = ownerProjects[i];
+                        break;
+                    }
+                }
+            }
+            // 멤버리뷰를 작성했는가
+
+            const isWritten = await MemberReview.findOne({
+                where: {
+                    writer_id: userId,
+                    lectureProject_id: sameProject,
+                    receiver_id: receiverId,
+                },
+            });
+            console.log("isWritten", isWritten);
+            if (isWritten) {
+                return null;
+            }
+
             // 멤버 리뷰 생성
             const memberReview = await MemberReview.create({
                 score: score,
                 comment: comment,
                 emojiType: emojiType,
                 writer_id: userId,
-                lectureProject_id: lectureProjectId,
-                receiver_id: receiverId
+                lectureProject_id: sameProject,
+                receiver_id: receiverId,
             });
             return memberReview;
-
-        } catch(err) {
+        } catch (err) {
             console.log(err);
             return;
         }
     },
-    
 };

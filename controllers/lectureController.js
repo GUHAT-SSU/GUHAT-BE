@@ -170,7 +170,6 @@ module.exports = {
 
     createReviewComment: async (req, res) => {
         try {
-            const lectureId = req.params.lectureId;
             const reviewId = req.params.reviewId;
             const like = req.body.like;
             const comment = req.body.comment;

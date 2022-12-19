@@ -43,19 +43,16 @@ module.exports = {
         }
     },
     getAllMyPosts: async (req, res) => {
-        try{
-            const data_list = await homeService.getAllMyPosts(
-                req.userId
-            );
+        try {
+            const data_list = await homeService.getAllMyPosts(req.userId);
             return res.status(200).json({
                 ok: true,
                 message: "홈화면 내가 작성한 글 전체 조회 성공!",
-                data_list
-            })
-        } catch(err) {
+                data: data_list ? data_list : [],
+            });
+        } catch (err) {
             console.log(err);
             return res.status(500).json(err);
         }
-
-    }
+    },
 };

@@ -1,4 +1,12 @@
-const { LecturePost, Profile, LectureProject, MemberReview, ProfileFile, LectureProjectMember, User} = require("../models");
+const {
+    LecturePost,
+    Profile,
+    LectureProject,
+    MemberReview,
+    ProfileFile,
+    LectureProjectMember,
+    User,
+} = require("../models");
 const lectureProjectService = require("../services/lectureProjectService");
 const postService = require("../services/postService");
 const profileService = require("../services/profileService");
@@ -43,28 +51,31 @@ module.exports = {
     },
     createMemberReview: async (req, res) => {
         try {
-            const lectureId = req.params.lectureId;
+            console.log(req.body);
             const profileId = req.params.profileId;
             const emojiType = req.body.emojiType;
             const score = req.body.score;
             const comment = req.body.comment;
             const memberReview = await lectureProjectService.createMemberReview(
                 req.userId,
-                lectureId,
                 profileId,
                 emojiType,
                 score,
-                comment,
-                
+                comment
             );
-            if(memberReview === "Error") { res.status(500).send("본인에게 리뷰를 남길 수 없다....")}
+
+            if (memberReview === null) {
+                return res.status(400).send("이미 리뷰를 작성했습니다");
+            }
+            if (memberReview === "Error") {
+                return res.status(400).send("본인에게 리뷰를 남길 수 없다....");
+            } else console.log("memberReview", memberReview);
             return res.status(200).json({
                 ok: true,
                 message: "팀플 멤버 리뷰 남기기 성공!",
-                memberReview: memberReview
-            })
-
-        } catch(err) {
+                memberReview: memberReview,
+            });
+        } catch (err) {
             console.log(err);
             return res.status(500).json(err);
         }
@@ -76,18 +87,18 @@ module.exports = {
             const userId = req.userId;
             // 프로필 소유자의 id 찾기
             const ownerId = await Profile.findOne({
-                where: { id: profileId }
-            })
-            .then((res) => {return res.dataValues.user_id});
-            console.log("ownerId", ownerId);
-            const profile = await profileService.findProfileByUserId(
-                ownerId
-            );
-            if(userId === ownerId) return res.status(500).json({
-                ok:false,
-                message: "자신의 프로필을 조회하려고 함."
+                where: { id: profileId },
+            }).then((res) => {
+                return res.dataValues.user_id;
             });
-            
+            console.log("ownerId", ownerId);
+            const profile = await profileService.findProfileByUserId(ownerId);
+            if (userId === ownerId)
+                return res.status(500).json({
+                    ok: false,
+                    message: "자신의 프로필을 조회하려고 함.",
+                });
+
             const teamHistoryResult = await lectureProjectService.getMyProjects(
                 ownerId
             );
@@ -103,54 +114,85 @@ module.exports = {
             });
 
             let file = [];
-            if(profile) {
+            if (profile) {
                 file = await ProfileFile.findAll({
-                    where: {user_id: ownerId },
+                    where: { user_id: ownerId },
                     raw: true,
                 });
             }
             /* ------- canAccess ---------- */
             let canAccess = false;
+            let sameProject = null;
             // 로그인된 유저가 참여한 project의 id 가져오기
             const userProjects = await LectureProjectMember.findAll({
-                where: {member_id: userId}
+                where: { member_id: userId },
             }).then((res) => {
                 return res.map((value) => {
-                    console.log("userProject Id: ", value.dataValues.lectureProject_id);
-                    return value.dataValues.lectureProject_id
-                })
+                    console.log(
+                        "userProject Id: ",
+                        value.dataValues.lectureProject_id
+                    );
+                    return value.dataValues.lectureProject_id;
+                });
             });
             console.log("userProjects ", userProjects);
             // 해당 프로필 owner가 참여한 project의 id 가져오기
             const ownerProjects = await LectureProjectMember.findAll({
-                where: {member_id: ownerId}
+                where: { member_id: ownerId },
             }).then((res) => {
                 return res.map((value) => {
-                    console.log("ownerProject Id: ", value.dataValues.lectureProject_id);
-                    return value.dataValues.lectureProject_id
-                })
+                    console.log(
+                        "ownerProject Id: ",
+                        value.dataValues.lectureProject_id
+                    );
+                    return value.dataValues.lectureProject_id;
+                });
             });
             console.log("ownerProjects ", ownerProjects);
-            for(let i = 0; i < userProjects.length; i++) {
-                for(let j = 0; j < ownerProjects.length; j++) {
-                    if(userProjects[i] === ownerProjects[i]) {
-                        canAccess = true;
+            let isWritten = false;
+            for (let i = 0; i < userProjects.length; i++) {
+                for (let j = 0; j < ownerProjects.length; j++) {
+                    if (userProjects[i] === ownerProjects[i]) {
+                        console.log(userProjects[i]);
+                        canAccess = userId !== ownerId;
+                        isWritten = await MemberReview.findOne({
+                            where: {
+                                writer_id: userId,
+                                lectureProject_id: sameProject,
+                                receiver_id: ownerId,
+                            },
+                        });
                         break;
                     }
                 }
-            }  
+            }
+
+            // if (!isWritten || !canAccess)
+            //     return res
+            //         .status(400)
+            //         .json({ message: "이미 작성된 리뷰가 있습니다" });
+
             const writer = await userService.getUserInfo(ownerId);
             /* ------- canAccess ---------- */
             comment_list = await MemberReview.findAll({
-                where: {receiver_id: ownerId},
-                attributes: ["id", "score", "comment", "emojiType", "writer_id", "createdAt", "updatedAt"]
+                where: { receiver_id: ownerId },
+                attributes: [
+                    "id",
+                    "score",
+                    "comment",
+                    "emojiType",
+                    "writer_id",
+                    "createdAt",
+                    "updatedAt",
+                ],
             }).then((res) => {
-                return res.map((value) => value.dataValues)
+                return res.map((value) => value.dataValues);
             });
             return res.status(200).json({
                 ok: true,
                 message: "다른 사람 프로필 조회 성공",
                 data: {
+                    isWritten: isWritten ? true : false,
                     canAccess: canAccess,
                     nickname: writer.nickname,
                     profileImg: writer.profileImg,
@@ -164,14 +206,12 @@ module.exports = {
                         : [0, 0, 0],
                     history: teamHistory ? teamHistory : [],
                     files: file ? file : [],
-                    commentList: comment_list
-
-                }
-            })
-            
-        } catch(err) {
+                    commentList: comment_list,
+                },
+            });
+        } catch (err) {
             console.log(err);
             return res.status(500).json(err);
         }
-    }
+    },
 };

@@ -21,7 +21,7 @@ module.exports = {
             return res.status(200).json({
                 ok: true,
                 message: "참여 이력 조회 성공!",
-                data,
+                data: data ? data : [],
             });
         } catch (err) {
             return res.status(500).json(err);
@@ -210,46 +210,40 @@ module.exports = {
                 isLike
             );
             return res.status(200).json({
-                ok:true,
-                message: message
+                ok: true,
+                message: message,
             });
-        } catch(err) {
+        } catch (err) {
             return res.status(500).json(err);
         }
-
     },
     getMyReview: async (req, res) => {
         try {
             const page = req.query.page;
-            const data = await profileService.findMyReview(
-                page,
-                req.userId
-            );
+            const data = await profileService.findMyReview(page, req.userId);
             return res.status(200).json({
                 ok: true,
                 message: "프로필 내가 작성한 리뷰 조회 성공!",
-                data
-            })
-        } catch(err) {
+                data,
+            });
+        } catch (err) {
             return res.status(500).json(err);
         }
     },
     getMemberReview: async (req, res) => {
         try {
             const profileId = req.params.profileId;
-            const {isOwner, reviewList} = await profileService.findMemberReview(
-                req.userId,
-                profileId
-            );
+            const { isOwner, reviewList } =
+                await profileService.findMemberReview(req.userId, profileId);
             return res.status(200).json({
                 ok: true,
                 message: "팀원 리뷰 조회 성공!",
                 isOwner,
-                reviewList
+                reviewList,
             });
         } catch (err) {
             console.log(err);
             return res.status(500).json(err);
         }
-    }
+    },
 };
