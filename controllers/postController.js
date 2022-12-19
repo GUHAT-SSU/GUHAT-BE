@@ -1,4 +1,5 @@
 const postService = require("../services/postService");
+const { findProfileByUserId } = require("../services/profileService");
 const userService = require("../services/userService");
 
 module.exports = {
@@ -104,7 +105,8 @@ module.exports = {
 
             const data = await postService.getPost(postId);
             const writer = await userService.getUserInfo(data.writer_id);
-            let isApply = false;
+
+            let isApply = "none";
             console.log(data);
             const Roles = [];
             for (let i = 0; i < data.Roles.length; i++) {
@@ -112,12 +114,22 @@ module.exports = {
                 for (let j = 0; j < data.Roles[i].RoleAppliers.length; j++) {
                     const applier = data.Roles[i].RoleAppliers[j];
                     if (applier.dataValues.user_id === userId) {
-                        isApply = true;
+                        isApply = applier.dataValues.status;
                     }
                     const user = await userService.getUserInfo(
                         applier.dataValues.user_id
                     );
-                    const applierInfo = { ...applier.dataValues, user };
+                    const profile = await findProfileByUserId(user.id);
+                    const applierInfo = {
+                        ...applier.dataValues,
+                        user,
+                        profile: profile
+                            ? {
+                                  id: profile?.id,
+                                  mode: profile?.mode,
+                              }
+                            : null,
+                    };
                     RoleAppliers.push(applierInfo);
                 }
                 Roles.push({ ...data.Roles[i].dataValues, RoleAppliers });

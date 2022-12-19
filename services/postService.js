@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember } = require("../models");
+const { LecturePost, Lecture, User, Role, RoleApplier } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const lectureService = require("./lectureService");
 const userService = require("./userService");
@@ -34,13 +34,11 @@ module.exports = {
                 // console.log(newRole.id);
             }
             console.log("newPost exists? : ");
-            console.log(newPost.id);
+            console.log(newPost);
             return {
                 type: "Success",
                 message: "You successfully created a new post!",
                 postId: newPost.dataValues.id,
-                newProject: newProject!==null,
-                newProjectMember: newProjectMember!==null 
             };
         } catch (err) {
             console.log(err);
@@ -77,6 +75,13 @@ module.exports = {
                 lecturePost_id: postId,
             });
             console.log("newApplier exists? : ", newApplier.id);
+            return {
+                type: "Success",
+                statusCode: 200,
+                message: "You successfully applied to the lecture!",
+                userId: userId,
+                applierId: newApplier.id,
+            };
         } catch (err) {
             console.log(err);
             return {
@@ -331,7 +336,7 @@ module.exports = {
                 console.log(res);
                 return res.map((r) => r.dataValues);
             });
-            console.log("result", lecturePosts);
+
             const data_list = [];
 
             for (let l = 0; l < lecturePosts.length; l++) {

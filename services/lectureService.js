@@ -107,12 +107,14 @@ module.exports = {
                 });
                 // 좋아요 수 세기
                 let likeCnt = 0;
-                const likes = await LectureReviewLike.findAll({where: {review_id: review.id}});
-                likes.forEach((like)=> {
-                    if(like.status === "like") {
+                const likes = await LectureReviewLike.findAll({
+                    where: { review_id: review.id },
+                });
+                likes.forEach((like) => {
+                    if (like.status === "like") {
                         likeCnt++;
                     }
-                })
+                });
                 reviewList.push({
                     id: review.id,
                     title: review.title,
@@ -277,12 +279,12 @@ module.exports = {
         try {
             // 해당 리뷰 가져오기
             const review = await LectureReview.findOne({
-                where: {id: reviewId},
+                where: { id: reviewId },
                 include: [
                     {
                         model: LectureReviewFile,
                         required: false,
-                        where: {review_id: reviewId}
+                        where: { review_id: reviewId },
                     },
                 ],
             }).then((res) => {
@@ -299,7 +301,8 @@ module.exports = {
             const lecture = await Lecture.findOne({
                 where: { id: lectureId },
             });
-            data_list.push({
+
+            return {
                 isOwner: review.isOwner,
                 title: review.title,
                 year: lecture.year,
@@ -315,10 +318,11 @@ module.exports = {
                 reviewLevel: review.level,
                 subject: review.topic,
                 detail: review.detail,
-                files: review.LectureReviewFile.file
-            })
-            return data_list;
-        } catch(err) {
+                files: review.LectureReviewFiles
+                    ? review.LectureReviewFiles.map((f) => f.dataValues.file)
+                    : [],
+            };
+        } catch (err) {
             console.log(err);
             return;
         }

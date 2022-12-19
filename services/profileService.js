@@ -272,24 +272,28 @@ module.exports = {
     /* ------- GET : 프로필 검색 결과---- ----- */
     findProfileBySkill: async (stack) => {
         try {
-            return await Profile.findAll({
+            const data_list = [];
+            const profiles = await Profile.findAll({
                 where: {
                     mode: "public",
                     skill: {
                         [Op.like]: "%" + stack + "%",
                     },
                 },
-            }).then((res) => {
-                const profiles = res.map((profile) => {
-                    return {
-                        ...profile.dataValues,
-                        personality: JSON.parse(profile.dataValues.personality),
-                        skill: JSON.parse(profile.dataValues.skill),
-                    };
-                });
-
-                return profiles;
+                raw: true,
             });
+
+            for (let i = 0; i < profiles.length; i++) {
+                const user = await userService.getUserInfo(profiles[i].user_id);
+                data_list.push({
+                    ...profiles[i],
+                    personality: JSON.parse(profiles[i].personality),
+                    skill: JSON.parse(profiles[i].skill),
+                    user,
+                });
+            }
+            console.log(data_list);
+            return data_list;
         } catch (err) {
             console.log(err);
             throw new Error(err);

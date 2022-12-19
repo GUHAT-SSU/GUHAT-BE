@@ -1,4 +1,4 @@
-const { User, Schedule } = require("../models");
+const { User, Schedule, Profile } = require("../models");
 const UserProfileImg = require("../models/userProfileImg");
 
 module.exports = {
@@ -32,6 +32,11 @@ module.exports = {
                     require: false,
                     where: { user_id: id },
                 },
+                {
+                    model: Profile,
+                    require: false,
+                    where: { user_id: id },
+                },
             ],
         })
             .then((res) => {
@@ -41,6 +46,10 @@ module.exports = {
                         nickname: res.dataValues.nickname,
                         level: res.dataValues.level,
                         profileImg: res.dataValues.UserProfileImg.file,
+                        profile: {
+                            id: res.dataValues?.Profile.id,
+                            mode: res.dataValues?.Profile.mode,
+                        },
                     };
                 return res;
             })
