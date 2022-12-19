@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember } = require("../models");
+const { LecturePost, Lecture, User, Role, RoleApplier, LectureProject, LectureProjectMember, LectureReview, LectureReviewFile, LectureReviewLike, sequelize } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const lectureService = require("./lectureService");
 const userService = require("./userService");
@@ -282,6 +282,7 @@ module.exports = {
                 else return res;
             });
 
+            await LecturePost.update({viewCnt: sequelize.literal('viewCnt + 1')}, {where: {id: postId}});
             const lecture = await Lecture.findByPk(post.lecture_id).then(
                 (res) => {
                     return {
