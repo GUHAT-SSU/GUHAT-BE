@@ -82,7 +82,10 @@ module.exports = {
             const profile = await profileService.findProfileByUserId(
                 ownerId
             );
-            if(userId === ownerId) return res.status(500).send("자신의 프로필을 조회하려고 함.");
+            if(userId === ownerId) return res.status(500).json({
+                ok:false,
+                message: "자신의 프로필을 조회하려고 함."
+            });
             
             const teamHistoryResult = await lectureProjectService.getMyProjects(
                 ownerId
