@@ -14,7 +14,9 @@ const {
     LectureReviewLike,
     LectureProjectMember,
 } = require("../models");
-const { myFindMajor } = require("../utils/myFunction");
+const { findOne } = require("../models/user");
+const { myFindMajor, mySort } = require("../utils/myFunction");
+const userService = require("./userService");
 
 module.exports = {
     getUserInfo: async (userId) => {
@@ -294,4 +296,192 @@ module.exports = {
             throw Error(err);
         }
     },
-};
+    getAllMyPosts: async(userId) => {
+        try {
+            let major;
+            // // pagination
+            // let limit = 10;
+            // let offset = 0;
+            // if(page > 1) {
+            //     offset = (page - 1) * limit;
+            // }
+
+            const data_list = [];
+
+            /* ----- lecturePost 찾기 시작 ----- */
+            // 내가 작성한 구인글 모두 가져오기
+            const lecturePosts = await LecturePost.findAll({
+                include: [
+                    {
+                        model: Role,
+                        required: false,
+                        include: [
+                            {
+                                model: RoleApplier,
+                                required: false,
+                                where: {
+                                    group_id: {
+                                        [Op.col]: "Roles.id"
+                                    },
+                                },
+                                atrributes: ["group_id", "status", "user_id"],
+                            },
+                        ],
+                        attributes: ["id", "name", "max"],
+                    },
+                ],
+                // pagination
+                // offset: offset,
+                // limit: limit,
+                order: [["createdAt", "DESC"]], // 최신순
+                where: {
+                    writer_id: userId
+                }
+            }).then((res) => {
+                return res.map((res) => {
+                    return res.dataValues;
+                });
+            });
+            for(let l = 0; l < lecturePosts.length; l++) {
+                const lecturePost = lecturePosts[l];
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: lecturePost.lecture_id,
+                    }
+                }).then((result) => {
+                    return {
+                        ...result.dataValues,
+                        professor: JSON.parse(result.dataValues.professor),
+                    };
+                });
+                major = await myFindMajor(lecture);
+                const writer = await userService.getUserInfo(
+                    lecturePost.writer_id
+                );
+                let total = 0;
+                let current = 0;
+                let isApply = false;
+                let status;
+                const isOwner = userId === lecturePost.writer_id;
+                lecturePost.Roles.forEach((role) => {
+                    total += role.max;
+                    role.RoleAppliers.forEach((mem) => {
+                        if (mem.status === "success") current++;
+                        if (mem.user_id === userId) {
+                            isApply = true;
+                            status = mem.status;
+                        }
+                    });
+                });
+                // data_list 에 push
+                data_list.push({
+                    type: "lecturePost",
+                    data: {
+                        id: lecturePost.id,
+                        createdAt: lecturePost.createdAt,
+                        lecture: {
+                            lectureId: lecture.id,
+                            name: lecture.name,
+                            professors: lecture.professor,
+                            semester: lecture.semester,
+                            schedule: lecture.schedule,
+                        },
+                        type: major,
+                        writer: {
+                            studentId: writer.id,
+                            name: writer.name,
+                            nickname: writer.nickname,
+                            level: writer.level,
+                            profileImg: writer.profileImg,
+                        },
+                        isApply: isApply,
+                        status: status ? status : "owner",
+                        isOwner: isOwner,
+                        endDate: lecturePost.endDate,
+                        title: lecturePost.title,
+                        detail: lecturePost.detail,
+                        viewCount: lecturePost.viewCnt,
+                        total: total,
+                        current: current,
+                    },
+                    createdAt: lecturePost.createdAt
+                })
+            }
+            /* ----- lecturePost 찾기 끝 ----- */
+            /* ----- reveiwPost 찾기 시작 ------ */
+            const reviews = await LectureReview.findAll({
+                order: [["createdAt", "DESC"]],
+                where: {
+                    writer_id: userId
+                }
+            }).then((res) => {
+                return res.map((res) => {
+                    return {
+                        ...res.dataValues,
+                    }; 
+                });
+            });
+            for(let r = 0; r < reviews.length; r++) {
+                const review = reviews[r];
+                const lecture = await Lecture.findOne({
+                    where: {
+                        id: review.lecture_id,
+                    },
+                }).then((result) => {
+                    return result.dataValues;
+                });
+                const writer = await User.findOne({
+                    where: {id: review.writer_id},
+                    include: [
+                        {
+                            model: UserProfileImg,
+                            required: false,
+                            where: { user_id: review.writer_id },
+                        },
+                    ],
+                });
+                // likeCount 세기
+                let likeCount = 0;
+                const likes = await LectureReviewLike.findAll({
+                    where: {review_id: review.id}
+                }).then((res) =>  res.map((value) => value.dataValues));
+                likes.forEach((like) => {
+                    if (like.status === "like") likeCount++;
+                });
+                data_list.push({
+                    type: "lectureReview",
+                    data: {
+                        id: review.id,
+                        lecture: {
+                            lectureId: lecture.id,
+                            name: lecture.name,
+                            professors: JSON.parse(lecture.professor),
+                            semester: lecture.semester,
+                            year: lecture.year,
+                            schedule: JSON.parse(lecture.schedule),
+                        },
+                        writer: {
+                            studentId: writer.id,
+                            name: writer.name,
+                            nickname: writer.nickname,
+                            level: writer.level,
+                            profileImg: writer.UserProfileImg.file,
+                        },
+                        title: review.title,
+                        detail: review.detail,
+                        viewCount: review.viewCnt,
+                        likeCount: likeCount,
+                    },
+                    createdAt: review.createdAt,
+                });
+                console.log(data_list);
+                const sorted_list = mySort(data_list, null);
+                return sorted_list;
+            }
+
+        } catch(err) {
+            console.log(err);
+            return;
+        }
+    }
+}
