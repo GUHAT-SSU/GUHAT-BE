@@ -178,7 +178,40 @@ module.exports = {
             return res.status(500).json(err);
         }
     },
-    /* -------------- PATCH '/posting/lecture/member?writerId ={userId} && postId={postId}' 구인글 지원상태 변경 끝 ----------------- */
+    /* -------------- GET 팀플 리뷰 리스트 전체 조회 ----------------- */
+    getAllReview: async (req, res) => {
+        try {
+            const sort = req.query.sort;
+            let page = req.query.page;
+            if(page == null) {
+                page = 1;
+            }
+            if (
+                !sort == null &&
+                !(sort == "latest") &&
+                !(sort == "popular") &&
+                !(sort == "level") &&
+                !(sort == "like")
+            ) {
+                return res
+                    .status(404)
+                    .send({ message: "그런 sort는 없습니다........" });
+            }
+            const data = await postService.findAllReviews(
+                req.userId,
+                sort,
+                page
+            )
 
+            return res.status(200).json({
+                ok: true,
+                message: "팀플 리뷰 리스트 전체 조회 성공!",
+                data
+            });
+        } catch(err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    }
     /* -------------- POST'/posting/lecture/close? postId={postId}' 구인글 마감 ----------------- */
 };

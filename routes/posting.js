@@ -11,8 +11,7 @@ router.post("/lecture/member", authChecker, postController.updateApplyStatus); /
 
 router.get("/lecture/:postId", authChecker, postController.getPosting); // 구인글 상세 조회
 router.get("/lectures", authChecker, postController.getAllPost); // 구인글 리스트 조회
-//router.get("/lecture/member", authChecker, postController.getAllAppliers); // 작성한 구인글 지원자 리스트 조회
-// router.get("/lecture/apply", authChecker, postController.getMyApplyPosting); // 내가 지원한 구인글 리스트 조회
+router.get("/review/all", authChecker, postController.getAllReview); // 팀플 리뷰 리스트 전체 조회
 
 
 module.exports = router;
