@@ -1,4 +1,4 @@
-const { ProfileFile } = require("../models");
+const { ProfileFile, MemberReview } = require("../models");
 const lectureProjectService = require("../services/lectureProjectService");
 const profileService = require("../services/profileService");
 const { delete_file } = require("../utils/s3");
@@ -40,6 +40,11 @@ module.exports = {
                 req.userId
             );
 
+            const comments = await MemberReview.findAll({
+                where: { receiver_id: req.userId },
+                raw: false,
+            });
+
             const teamHistory = teamHistoryResult.map((project) => {
                 return {
                     projectId: project.project.id,
@@ -66,6 +71,7 @@ module.exports = {
                     detail: profile.detail,
                     introduction: profile.introduction,
                     mode: profile.mode,
+                    comments: comments ? comments : [],
                     skill: profile.skill ? JSON.parse(profile.skill) : [],
                     personality: profile.personality
                         ? JSON.parse(profile.personality)

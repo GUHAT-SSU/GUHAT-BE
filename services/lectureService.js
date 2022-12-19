@@ -5,7 +5,6 @@ const {
     LectureReviewFile,
     LectureReview,
     LectureReviewLike,
-    sequelize
 } = require("../models");
 const { Op, Error } = require("sequelize");
 const bodyParser = require("body-parser");
@@ -89,7 +88,14 @@ module.exports = {
             const lecture = await Lecture.findOne({
                 where: { id: lectureId },
             }).then((res) => {
-                return res.dataValues;
+                return res.map((val, idx) => {
+                    return {
+                        ...val.dataValues,
+                        schedule: JSON.parse(val.dataValues.schedule),
+                        professor: JSON.parse(val.dataValues.professor),
+                        target: JSON.parse(val.dataValues.target),
+                    };
+                });
             });
 
             const reviewList = [];
@@ -203,8 +209,10 @@ module.exports = {
     reviewPostValidation: async (userId, lectureId) => {
         try {
             const schedule = await scheduleService.findScheduleByUserId(userId);
+
             if (schedule.length == 0)
                 return { ok: false, message: "시간표 업로드가 필요합니다" };
+
             let validation = schedule
                 .map((s) => s.dataValues)
                 .findIndex((s) => {
@@ -278,7 +286,6 @@ module.exports = {
     },
     findReviewDetail: async (userId, lectureId, reviewId) => {
         try {
-            const data_list = [];
             // 해당 리뷰 가져오기
             const review = await LectureReview.findOne({
                 where: { id: reviewId },
@@ -295,8 +302,7 @@ module.exports = {
                     isOwner: res.dataValues.writer_id === userId,
                 };
             });
-            // 조회수 increament
-            await LectureReview.update({viewCnt: sequelize.literal('viewCnt + 1')}, {where: {id: review.id}});
+
             console.log(review);
             // writer 정보 가져오기
             const writer = await userService.getUserInfo(review.writer_id);

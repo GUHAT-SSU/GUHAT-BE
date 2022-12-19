@@ -154,11 +154,12 @@ module.exports = {
                 for (let j = 0; j < ownerProjects.length; j++) {
                     if (userProjects[i] === ownerProjects[i]) {
                         console.log(userProjects[i]);
+
                         canAccess = userId !== ownerId;
                         isWritten = await MemberReview.findOne({
                             where: {
                                 writer_id: userId,
-                                lectureProject_id: sameProject,
+                                lectureProject_id: userProjects[i],
                                 receiver_id: ownerId,
                             },
                         });
@@ -188,11 +189,12 @@ module.exports = {
             }).then((res) => {
                 return res.map((value) => value.dataValues);
             });
+            console.log(isWritten);
             return res.status(200).json({
                 ok: true,
                 message: "다른 사람 프로필 조회 성공",
                 data: {
-                    isWritten: isWritten ? true : false,
+                    isWritten: isWritten === null ? false : true,
                     canAccess: canAccess,
                     nickname: writer.nickname,
                     profileImg: writer.profileImg,
