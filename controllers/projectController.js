@@ -39,4 +39,32 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    createMemberReview: async (req, res) => {
+        try {
+            const lectureId = req.params.lectureId;
+            const profileId = req.params.profileId;
+            const emojiType = req.body.emojiType;
+            const score = req.body.score;
+            const comment = req.body.comment;
+            const memberReview = await lectureProjectService.createMemberReview(
+                req.userId,
+                lectureId,
+                profileId,
+                emojiType,
+                score,
+                comment,
+                
+            );
+            if(memberReview === "Error") { res.status(500).send("본인에게 리뷰를 남길 수 없다....")}
+            return res.status(200).json({
+                ok: true,
+                message: "팀플 멤버 리뷰 남기기 성공!",
+                memberReview: memberReview
+            })
+
+        } catch(err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    }
 };
