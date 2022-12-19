@@ -5,6 +5,7 @@ const {
     LectureReviewFile,
     LectureReview,
     LectureReviewLike,
+    sequelize
 } = require("../models");
 const { Op, Error } = require("sequelize");
 const bodyParser = require("body-parser");
@@ -275,6 +276,7 @@ module.exports = {
     },
     findReviewDetail: async (userId, lectureId, reviewId) => {
         try {
+            const data_list = [];
             // 해당 리뷰 가져오기
             const review = await LectureReview.findOne({
                 where: {id: reviewId},
@@ -291,7 +293,8 @@ module.exports = {
                     isOwner: res.dataValues.writer_id === userId,
                 };
             });
-
+            // 조회수 increament
+            await LectureReview.update({viewCnt: sequelize.literal('viewCnt + 1')}, {where: {id: review.id}});
             console.log(review);
             // writer 정보 가져오기
             const writer = await userService.getUserInfo(review.writer_id);
@@ -315,7 +318,8 @@ module.exports = {
                 reviewLevel: review.level,
                 subject: review.topic,
                 detail: review.detail,
-                files: review.LectureReviewFile.file
+                viewCount: review.viewCnt,
+                files: review.LectureReviewFile?.file ? review.LectureReviewFile?.file :[]
             })
             return data_list;
         } catch(err) {
