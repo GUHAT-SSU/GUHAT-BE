@@ -8,6 +8,7 @@ const {
     RoleApplier,
     Profile,
     ProfileFile,
+    ProfileLike,
 } = require("../models");
 const { myFindMajor, mySort } = require("../utils/myFunction");
 const userService = require("./userService");
@@ -299,4 +300,40 @@ module.exports = {
             throw new Error(err);
         }
     },
+    /* 이력서 추천 / 비추천 */
+    createProfileLike: async (userId, profiileId, isLike) => {
+        try {
+            const profile = await Profile.findOne({
+                where: {id: profileId}
+            }); 
+            if(isLike) {
+                const like = await ProfileLike.create({
+                    profile_id: profile.id,
+                    liker_id: userId,
+                    owner_id: profile.user_id
+                }).then((res) => {
+                    console.log("이력서 추천 성공!", res.id);
+                });
+                return {
+                    message: "이력서 추천 성공!"
+                }
+            } else {
+                const dislike = await ProfileLike.destroy({
+                    where: {
+                        profile_id: profile.id,
+                        liker_id: userId,
+                        owner_id: profile.user_id
+                    }
+                }).then((res) => {
+                    console.log("이력서 비추천 성공!", res.id);
+                });
+                return {
+                    message: "이력서 비추천 성공!"
+                }
+            }
+        } catch (err) {
+            console.log(err);
+            return;
+        } 
+    }
 };

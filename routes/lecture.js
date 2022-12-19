@@ -55,5 +55,4 @@ router.get(
     authChecker,
     lectureController.getReviewComments
 );
-
 module.exports = router;

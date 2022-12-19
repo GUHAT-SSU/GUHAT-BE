@@ -17,5 +17,6 @@ router.post(
     profileController.addProfileFile
 );
 router.post("/file/delete", authChecker, profileController.deleteProfileFile);
+router.post("/:profileId/like", authChecker, profileController.createProfileLike);
 
 module.exports = router;
