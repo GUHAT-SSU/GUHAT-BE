@@ -389,29 +389,29 @@ module.exports = {
                     });
                 });
                 // data_list 정리
-                if (isOwner || isApply)
-                    data_list.push({
-                        id: lecturePost.id,
-                        createdAt: lecturePost.createdAt,
-                        lecture: lecture,
-                        type: major,
-                        writer: {
-                            studentId: writer.id,
-                            name: writer.name,
-                            nickname: writer.nickname,
-                            level: writer.level,
-                            profileImg: writer.profileImg,
-                        },
-                        isApply: isApply,
-                        status: status ? status : "owner",
-                        isOwner: isOwner,
-                        endDate: lecturePost.endDate,
-                        title: lecturePost.title,
-                        detail: lecturePost.detail,
-                        viewCount: lecturePost.viewCnt,
-                        total: total,
-                        current: current,
-                    });
+
+                data_list.push({
+                    id: lecturePost.id,
+                    createdAt: lecturePost.createdAt,
+                    lecture: lecture,
+                    type: major,
+                    writer: {
+                        studentId: writer.id,
+                        name: writer.name,
+                        nickname: writer.nickname,
+                        level: writer.level,
+                        profileImg: writer.profileImg,
+                    },
+                    isApply: isApply,
+                    status: status ? status : "owner",
+                    isOwner: isOwner,
+                    endDate: lecturePost.endDate,
+                    title: lecturePost.title,
+                    detail: lecturePost.detail,
+                    viewCount: lecturePost.viewCnt,
+                    total: total,
+                    current: current,
+                });
             }
 
             const sorted_list = mySort(data_list, sort);
@@ -448,6 +448,12 @@ module.exports = {
                     where: {
                         id: review.lecture_id,
                     },
+                }).then((result) => {
+                    return {
+                        ...result.dataValues,
+                        professor: JSON.parse(result.dataValues.professor),
+                        schedule: JSON.parse(result.dataValues.schedule),
+                    };
                 });
                 // 작성자 정보 불러오기
                 const writer = await User.findByPk(review.writer_id);
@@ -463,6 +469,7 @@ module.exports = {
                 let likeCnt = 0;
                 const likes = await LectureReviewLike.findAll({
                     where: { review_id: review.id },
+                    raw: true,
                 });
                 likes.forEach((like) => {
                     if (like.status === "like") {
@@ -481,7 +488,7 @@ module.exports = {
                         nickname: writer.nickname,
                         writerLevel: writer.level,
                         viewCount: review.viewCnt,
-                        likeCount: likeCnt,
+                        likeCnt: likeCnt,
                         createdAt: review.createdAt,
                         isOwner: review.isOwner,
                     },

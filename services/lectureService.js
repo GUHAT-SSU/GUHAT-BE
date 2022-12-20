@@ -87,15 +87,14 @@ module.exports = {
             });
             const lecture = await Lecture.findOne({
                 where: { id: lectureId },
-            }).then((res) => {
-                return res.map((val, idx) => {
+            }).then((val) => {
+                if (val)
                     return {
                         ...val.dataValues,
                         schedule: JSON.parse(val.dataValues.schedule),
                         professor: JSON.parse(val.dataValues.professor),
                         target: JSON.parse(val.dataValues.target),
                     };
-                });
             });
 
             const reviewList = [];

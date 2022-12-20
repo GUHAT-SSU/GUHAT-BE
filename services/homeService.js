@@ -47,14 +47,16 @@ module.exports = {
                     receiver_id: userId,
                 },
                 attributes: ["score"],
+                raw: true,
             }).then((lectureScore) => {
+                console.log("lectureScore", lectureScore);
                 lectureScore.forEach((score) => {
                     count++;
-                    total += score;
+                    total += score.score;
                 });
                 return total / count;
             });
-
+            console.log("reviewScore", reviewScore);
             const data = {
                 ...user.dataValues,
                 profileImg: profileImg.file ? profileImg.file : null,
@@ -296,7 +298,7 @@ module.exports = {
             throw Error(err);
         }
     },
-    getAllMyPosts: async(userId) => {
+    getAllMyPosts: async (userId) => {
         try {
             let major;
             // // pagination
@@ -321,7 +323,7 @@ module.exports = {
                                 required: false,
                                 where: {
                                     group_id: {
-                                        [Op.col]: "Roles.id"
+                                        [Op.col]: "Roles.id",
                                     },
                                 },
                                 atrributes: ["group_id", "status", "user_id"],
@@ -335,19 +337,19 @@ module.exports = {
                 // limit: limit,
                 order: [["createdAt", "DESC"]], // 최신순
                 where: {
-                    writer_id: userId
-                }
+                    writer_id: userId,
+                },
             }).then((res) => {
                 return res.map((res) => {
                     return res.dataValues;
                 });
             });
-            for(let l = 0; l < lecturePosts.length; l++) {
+            for (let l = 0; l < lecturePosts.length; l++) {
                 const lecturePost = lecturePosts[l];
                 const lecture = await Lecture.findOne({
                     where: {
                         id: lecturePost.lecture_id,
-                    }
+                    },
                 }).then((result) => {
                     return {
                         ...result.dataValues,
@@ -404,24 +406,24 @@ module.exports = {
                         total: total,
                         current: current,
                     },
-                    createdAt: lecturePost.createdAt
-                })
+                    createdAt: lecturePost.createdAt,
+                });
             }
             /* ----- lecturePost 찾기 끝 ----- */
             /* ----- reveiwPost 찾기 시작 ------ */
             const reviews = await LectureReview.findAll({
                 order: [["createdAt", "DESC"]],
                 where: {
-                    writer_id: userId
-                }
+                    writer_id: userId,
+                },
             }).then((res) => {
                 return res.map((res) => {
                     return {
                         ...res.dataValues,
-                    }; 
+                    };
                 });
             });
-            for(let r = 0; r < reviews.length; r++) {
+            for (let r = 0; r < reviews.length; r++) {
                 const review = reviews[r];
                 const lecture = await Lecture.findOne({
                     where: {
@@ -431,7 +433,7 @@ module.exports = {
                     return result.dataValues;
                 });
                 const writer = await User.findOne({
-                    where: {id: review.writer_id},
+                    where: { id: review.writer_id },
                     include: [
                         {
                             model: UserProfileImg,
@@ -443,8 +445,8 @@ module.exports = {
                 // likeCount 세기
                 let likeCount = 0;
                 const likes = await LectureReviewLike.findAll({
-                    where: {review_id: review.id}
-                }).then((res) =>  res.map((value) => value.dataValues));
+                    where: { review_id: review.id },
+                }).then((res) => res.map((value) => value.dataValues));
                 likes.forEach((like) => {
                     if (like.status === "like") likeCount++;
                 });
@@ -478,10 +480,9 @@ module.exports = {
                 const sorted_list = mySort(data_list, null);
                 return sorted_list;
             }
-
-        } catch(err) {
+        } catch (err) {
             console.log(err);
             return;
         }
-    }
-}
+    },
+};
