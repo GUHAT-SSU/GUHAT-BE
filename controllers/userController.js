@@ -1,8 +1,3 @@
-const {
-    usaintLogin,
-    getProfile,
-    getSchedule,
-} = require("../utils/crawling-util");
 const userService = require("../services/userService");
 
 const scheduleService = require("../services/scheduleService");
